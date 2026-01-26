@@ -1,56 +1,10 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-🌿 Professional Plant Disease Detection Web Dashboard
-Ultra Advanced Web Interface with Real-time Analytics
-"""
-
-from flask import Flask, render_template_string, request, jsonify, send_file
-import tensorflow as tf
-import cv2
-import numpy as np
-from datetime import datetime, timedelta
-import os
-import json
-from pathlib import Path
-import base64
-from collections import Counter
-import io
-
-# ===============================
-# FLASK APP
-# ===============================
-
-app = Flask(__name__)
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
-app.config['UPLOAD_FOLDER'] = 'web_uploads'
-
-MODEL_PATH = 'YZDBHTS_colab.h5'
-TARGET_SIZE = (224, 224)
-LABELS = ["Külleme", "Leke", "Pas", "Sağlıklı"]
-LABEL_EN = {"Külleme": "Powdery Mildew", "Leke": "Leaf Spot", "Pas": "Rust", "Sağlıklı": "Healthy"}
-
-Path(app.config['UPLOAD_FOLDER']).mkdir(exist_ok=True)
-Path('web_results').mkdir(exist_ok=True)
-
-try:
-    model = tf.keras.models.load_model(MODEL_PATH, compile=False)
-    print(f"✓ Model loaded: {MODEL_PATH}")
-except Exception as e:
-    print(f"✗ Model loading error: {e}")
-    model = None
-
-# ===============================
-# ULTRA ADVANCED HTML TEMPLATE
-# ===============================
-
-HTML_TEMPLATE = '''
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🌿 Plant Disease Detection Pro</title>
+    <title>YZDBHTKS - Yapay Zeka Destekli Bitki Hastalıkları Teşhis ve Kontrol Sistemi</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -87,11 +41,10 @@ HTML_TEMPLATE = '''
             color: var(--text-light);
         }
 
-        /* Navbar */
         .navbar {
             background: var(--primary-gradient);
             padding: 1rem 2rem;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             position: sticky;
             top: 0;
             z-index: 1000;
@@ -116,7 +69,7 @@ HTML_TEMPLATE = '''
         }
 
         .theme-toggle {
-            background: rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.2);
             border: none;
             color: white;
             padding: 0.5rem 1rem;
@@ -129,18 +82,16 @@ HTML_TEMPLATE = '''
         }
 
         .theme-toggle:hover {
-            background: rgba(255,255,255,0.3);
+            background: rgba(255, 255, 255, 0.3);
             transform: scale(1.05);
         }
 
-        /* Main Container */
         .container {
             max-width: 1400px;
             margin: 2rem auto;
             padding: 0 2rem;
         }
 
-        /* Dashboard Grid */
         .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -152,7 +103,7 @@ HTML_TEMPLATE = '''
             background: white;
             padding: 1.5rem;
             border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             transition: var(--transition);
             position: relative;
             overflow: hidden;
@@ -164,7 +115,7 @@ HTML_TEMPLATE = '''
 
         .stat-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
         }
 
         .stat-card::before {
@@ -204,7 +155,6 @@ HTML_TEMPLATE = '''
             letter-spacing: 1px;
         }
 
-        /* Main Content Area */
         .content-grid {
             display: grid;
             grid-template-columns: 2fr 1fr;
@@ -218,12 +168,11 @@ HTML_TEMPLATE = '''
             }
         }
 
-        /* Upload Section */
         .upload-section {
             background: white;
             padding: 2rem;
             border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         }
 
         body.dark-mode .upload-section {
@@ -237,19 +186,19 @@ HTML_TEMPLATE = '''
             text-align: center;
             cursor: pointer;
             transition: var(--transition);
-            background: linear-gradient(135deg, rgba(102,126,234,0.05) 0%, rgba(118,75,162,0.05) 100%);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
             position: relative;
         }
 
         .upload-area:hover {
             border-color: #764ba2;
-            background: linear-gradient(135deg, rgba(102,126,234,0.1) 0%, rgba(118,75,162,0.1) 100%);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
             transform: scale(1.02);
         }
 
         .upload-area.dragging {
             border-color: var(--success-color);
-            background: rgba(16,185,129,0.1);
+            background: rgba(16, 185, 129, 0.1);
         }
 
         .upload-icon {
@@ -259,15 +208,22 @@ HTML_TEMPLATE = '''
         }
 
         @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
         }
 
-        #imageInput, #batchInput {
+        #imageInput,
+        #batchInput {
             display: none;
         }
 
-        /* Preview Section */
         .preview-section {
             margin-top: 2rem;
             display: none;
@@ -277,7 +233,7 @@ HTML_TEMPLATE = '''
             position: relative;
             border-radius: 15px;
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             margin-bottom: 1rem;
         }
 
@@ -292,13 +248,12 @@ HTML_TEMPLATE = '''
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 50%);
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, transparent 50%);
             display: flex;
             align-items: flex-end;
             padding: 1.5rem;
         }
 
-        /* Buttons */
         .btn {
             background: var(--primary-gradient);
             color: white;
@@ -308,7 +263,7 @@ HTML_TEMPLATE = '''
             border-radius: 50px;
             cursor: pointer;
             transition: var(--transition);
-            box-shadow: 0 5px 15px rgba(102,126,234,0.4);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
@@ -317,7 +272,7 @@ HTML_TEMPLATE = '''
 
         .btn:hover {
             transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(102,126,234,0.6);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.6);
         }
 
         .btn:disabled {
@@ -334,13 +289,12 @@ HTML_TEMPLATE = '''
             background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
         }
 
-        /* Results Section */
         .result-container {
             margin-top: 2rem;
             padding: 2rem;
             background: white;
             border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             display: none;
             animation: slideIn 0.5s ease-out;
         }
@@ -354,6 +308,7 @@ HTML_TEMPLATE = '''
                 opacity: 0;
                 transform: translateY(30px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -375,7 +330,7 @@ HTML_TEMPLATE = '''
             border-radius: 50px;
             font-size: 1.8rem;
             font-weight: 700;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
         }
 
         .confidence-section {
@@ -406,19 +361,17 @@ HTML_TEMPLATE = '''
             font-size: 1.2rem;
         }
 
-        /* Charts */
         .chart-container {
             position: relative;
             height: 300px;
             margin: 2rem 0;
         }
 
-        /* History Sidebar */
         .history-section {
             background: white;
             padding: 2rem;
             border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             max-height: 800px;
             overflow-y: auto;
         }
@@ -442,7 +395,7 @@ HTML_TEMPLATE = '''
 
         .history-item:hover {
             transform: translateX(5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
 
         .history-thumbnail {
@@ -453,7 +406,6 @@ HTML_TEMPLATE = '''
             margin-right: 1rem;
         }
 
-        /* Loading */
         .loading {
             display: none;
             text-align: center;
@@ -471,11 +423,15 @@ HTML_TEMPLATE = '''
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
-        /* Comparison Mode */
         .comparison-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -483,7 +439,6 @@ HTML_TEMPLATE = '''
             margin-top: 2rem;
         }
 
-        /* Export Menu */
         .export-menu {
             position: relative;
             display: inline-block;
@@ -496,7 +451,7 @@ HTML_TEMPLATE = '''
             right: 0;
             background: white;
             border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             min-width: 200px;
             margin-top: 0.5rem;
             z-index: 1000;
@@ -512,8 +467,15 @@ HTML_TEMPLATE = '''
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .export-item {
@@ -533,7 +495,6 @@ HTML_TEMPLATE = '''
             background: #1a1a2e;
         }
 
-        /* Notifications */
         .notification {
             position: fixed;
             top: 100px;
@@ -541,7 +502,7 @@ HTML_TEMPLATE = '''
             background: white;
             padding: 1rem 1.5rem;
             border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             display: none;
             animation: slideInRight 0.3s ease-out;
             z-index: 1001;
@@ -552,8 +513,13 @@ HTML_TEMPLATE = '''
         }
 
         @keyframes slideInRight {
-            from { transform: translateX(400px); }
-            to { transform: translateX(0); }
+            from {
+                transform: translateX(400px);
+            }
+
+            to {
+                transform: translateX(0);
+            }
         }
 
         .notification.show {
@@ -562,7 +528,6 @@ HTML_TEMPLATE = '''
             gap: 1rem;
         }
 
-        /* Scrollbar */
         ::-webkit-scrollbar {
             width: 10px;
         }
@@ -580,7 +545,6 @@ HTML_TEMPLATE = '''
             border-radius: 5px;
         }
 
-        /* Responsive */
         @media (max-width: 768px) {
             .navbar {
                 padding: 1rem;
@@ -600,8 +564,8 @@ HTML_TEMPLATE = '''
         }
     </style>
 </head>
+
 <body>
-    <!-- Navbar -->
     <div class="navbar">
         <div class="navbar-brand">
             <i class="fas fa-leaf"></i>
@@ -632,18 +596,16 @@ HTML_TEMPLATE = '''
         </div>
     </div>
 
-    <!-- Notification -->
     <div class="notification" id="notification">
         <i class="fas fa-check-circle" style="color: var(--success-color); font-size: 1.5rem;"></i>
         <span id="notificationText">Success!</span>
     </div>
 
-    <!-- Main Container -->
     <div class="container">
-        <!-- Dashboard Stats -->
         <div class="dashboard-grid">
             <div class="stat-card">
-                <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <div class="stat-icon"
+                    style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
                     <i class="fas fa-camera"></i>
                 </div>
                 <div class="stat-value" id="totalScans">0</div>
@@ -651,7 +613,8 @@ HTML_TEMPLATE = '''
             </div>
 
             <div class="stat-card">
-                <div class="stat-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
+                <div class="stat-icon"
+                    style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
                     <i class="fas fa-check-circle"></i>
                 </div>
                 <div class="stat-value" id="healthyCount">0</div>
@@ -659,7 +622,8 @@ HTML_TEMPLATE = '''
             </div>
 
             <div class="stat-card">
-                <div class="stat-icon" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white;">
+                <div class="stat-icon"
+                    style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white;">
                     <i class="fas fa-exclamation-triangle"></i>
                 </div>
                 <div class="stat-value" id="diseasedCount">0</div>
@@ -667,7 +631,8 @@ HTML_TEMPLATE = '''
             </div>
 
             <div class="stat-card">
-                <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white;">
+                <div class="stat-icon"
+                    style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white;">
                     <i class="fas fa-chart-line"></i>
                 </div>
                 <div class="stat-value">87.25%</div>
@@ -675,9 +640,7 @@ HTML_TEMPLATE = '''
             </div>
         </div>
 
-        <!-- Main Content -->
         <div class="content-grid">
-            <!-- Upload & Results -->
             <div>
                 <div class="upload-section">
                     <h2 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
@@ -686,7 +649,7 @@ HTML_TEMPLATE = '''
                     </h2>
 
                     <div class="upload-area" id="uploadArea">
-                        <div class="upload-icon">📸</div>
+                        <div class="upload-icon">IMAGE</div>
                         <h3>Drop your plant image here</h3>
                         <p style="color: #6b7280; margin: 1rem 0;">or click to browse</p>
                         <input type="file" id="imageInput" accept="image/*" />
@@ -751,7 +714,6 @@ HTML_TEMPLATE = '''
                 </div>
             </div>
 
-            <!-- History Sidebar -->
             <div class="history-section">
                 <h2 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
                     <i class="fas fa-history"></i>
@@ -765,7 +727,6 @@ HTML_TEMPLATE = '''
             </div>
         </div>
 
-        <!-- Analytics Dashboard -->
         <div class="upload-section" style="margin-top: 2rem;">
             <h2 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
                 <i class="fas fa-chart-bar"></i>
@@ -778,13 +739,11 @@ HTML_TEMPLATE = '''
     </div>
 
     <script>
-        // Global state
         let history = [];
         let currentResult = null;
         let resultChart = null;
         let analyticsChart = null;
 
-        // Theme toggle
         function toggleTheme() {
             document.body.classList.toggle('dark-mode');
             const isDark = document.body.classList.contains('dark-mode');
@@ -792,12 +751,10 @@ HTML_TEMPLATE = '''
             document.getElementById('themeText').textContent = isDark ? 'Light Mode' : 'Dark Mode';
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
 
-            // Update charts
             if (resultChart) updateChartTheme(resultChart);
             if (analyticsChart) updateChartTheme(analyticsChart);
         }
 
-        // Load saved theme
         window.addEventListener('DOMContentLoaded', () => {
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme === 'dark') {
@@ -809,7 +766,6 @@ HTML_TEMPLATE = '''
             updateAnalytics();
         });
 
-        // Upload handling
         const uploadArea = document.getElementById('uploadArea');
         const imageInput = document.getElementById('imageInput');
         const batchInput = document.getElementById('batchInput');
@@ -975,12 +931,12 @@ HTML_TEMPLATE = '''
                             max: 100,
                             ticks: {
                                 color: textColor,
-                                callback: function(value) {
+                                callback: function (value) {
                                     return value + '%';
                                 }
                             },
                             grid: {
-                                color: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+                                color: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
                             }
                         },
                         x: {
@@ -988,7 +944,7 @@ HTML_TEMPLATE = '''
                                 color: textColor
                             },
                             grid: {
-                                color: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+                                color: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
                             }
                         }
                     }
@@ -999,7 +955,7 @@ HTML_TEMPLATE = '''
         function updateChartTheme(chart) {
             const isDark = document.body.classList.contains('dark-mode');
             const textColor = isDark ? '#e2e8f0' : '#2d3748';
-            const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+            const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
 
             chart.options.scales.y.ticks.color = textColor;
             chart.options.scales.x.ticks.color = textColor;
@@ -1142,7 +1098,7 @@ HTML_TEMPLATE = '''
                     (h.confidence * 100).toFixed(2) + '%',
                     h.inference_time.toFixed(3) + 's'
                 ])
-            ].map(row => row.join(',')).join('\\n');
+            ].map(row => row.join(',')).join('\n');
 
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = URL.createObjectURL(blob);
@@ -1184,7 +1140,6 @@ HTML_TEMPLATE = '''
             }, 3000);
         }
 
-        // Close export menu when clicking outside
         window.addEventListener('click', (e) => {
             if (!e.target.closest('.export-menu')) {
                 document.getElementById('exportDropdown').classList.remove('show');
@@ -1192,136 +1147,5 @@ HTML_TEMPLATE = '''
         });
     </script>
 </body>
+
 </html>
-'''
-
-
-# ===============================
-# HELPER FUNCTIONS
-# ===============================
-
-def preprocess_image(image_path):
-    """Image preprocessing"""
-    img = cv2.imread(image_path)
-    img_resized = cv2.resize(img, TARGET_SIZE)
-    img_array = np.expand_dims(img_resized, axis=0)
-    img_normalized = (img_array / 127.5) - 1
-    return img_normalized
-
-
-def allowed_file(filename):
-    """Check allowed file types"""
-    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'}
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-
-# ===============================
-# ROUTES
-# ===============================
-
-@app.route('/')
-def index():
-    """Main page"""
-    return render_template_string(HTML_TEMPLATE)
-
-
-@app.route('/predict', methods=['POST'])
-def predict():
-    """Prediction endpoint"""
-    if model is None:
-        return jsonify({'success': False, 'error': 'Model not loaded'})
-
-    if 'image' not in request.files:
-        return jsonify({'success': False, 'error': 'No image provided'})
-
-    file = request.files['image']
-
-    if file.filename == '':
-        return jsonify({'success': False, 'error': 'No file selected'})
-
-    if file and allowed_file(file.filename):
-        try:
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            filename = f"upload_{timestamp}_{file.filename}"
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(filepath)
-
-            processed_image = preprocess_image(filepath)
-
-            import time
-            start_time = time.time()
-            predictions = model.predict(processed_image, verbose=0)
-            inference_time = time.time() - start_time
-
-            pred_index = np.argmax(predictions)
-            prediction = LABELS[pred_index]
-            prediction_en = LABEL_EN[prediction]
-            confidence = float(predictions[0][pred_index])
-
-            all_scores = {
-                LABELS[i]: float(predictions[0][i])
-                for i in range(len(LABELS))
-            }
-
-            result = {
-                'success': True,
-                'prediction': prediction,
-                'prediction_en': prediction_en,
-                'confidence': confidence,
-                'all_scores': all_scores,
-                'inference_time': inference_time,
-                'timestamp': datetime.now().isoformat()
-            }
-
-            result_path = f"web_results/result_{timestamp}.json"
-            with open(result_path, 'w', encoding='utf-8') as f:
-                json.dump(result, f, ensure_ascii=False, indent=2)
-
-            return jsonify(result)
-
-        except Exception as e:
-            return jsonify({'success': False, 'error': str(e)})
-
-    return jsonify({'success': False, 'error': 'Invalid file type'})
-
-
-@app.route('/stats')
-def stats():
-    """Statistics endpoint"""
-    try:
-        results_dir = Path('web_results')
-        result_files = list(results_dir.glob('*.json'))
-
-        total = len(result_files)
-        predictions = {label: 0 for label in LABELS}
-
-        for result_file in result_files:
-            with open(result_file, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-                pred = data.get('prediction', '')
-                if pred in predictions:
-                    predictions[pred] += 1
-
-        return jsonify({
-            'success': True,
-            'total': total,
-            'predictions': predictions
-        })
-
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)})
-
-
-# ===============================
-# MAIN
-# ===============================
-
-if __name__ == '__main__':
-    print("\n" + "=" * 70)
-    print("🌿 PROFESSIONAL PLANT DISEASE DETECTION WEB DASHBOARD")
-    print("=" * 70)
-    print("\n✓ Server starting...")
-    print("✓ Open in browser: http://localhost:5000")
-    print("✓ Press CTRL+C to stop\n")
-
-    app.run(debug=True, host='0.0.0.0', port=5000)
