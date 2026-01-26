@@ -21,8 +21,8 @@ def main():
         choice = input("\nSeçiminiz: ").strip().lower()
 
         if choice == '1':
-            print("\nWeb Dashboard başlatılıyor...")
-            os.system('python app.py')
+            print("\nWeb Dashboard baslatiliyor...")
+            os.system('python dashboard.py')
             break
         elif choice == '2':
             print("\nCLI Analiz Sistemi başlatılıyor...")
