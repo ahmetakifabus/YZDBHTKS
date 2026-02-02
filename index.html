@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>YZDBTKS v8.4 - Mobil Uyumlu Panel</title>
+    
+    <link rel="icon" href="image_4067b1.png" type="image/png">
+
+    <!-- jsPDF Kütüphanesi -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: 'var(--color-brand-50)',
+                            100: 'var(--color-brand-100)',
+                            500: 'var(--color-brand-500)',
+                            600: 'var(--color-brand-600)',
+                            700: 'var(--color-brand-700)',
+                            800: '#065f46', 
+                            900: 'var(--color-brand-900)',
+                        },
+                        dark: {
+                            bg: 'var(--color-dark-bg)',     
+                            panel: 'var(--color-dark-panel)',  
+                            border: 'var(--color-dark-border)'  
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'soft': '0 10px 40px -10px rgba(0,0,0,0.08)',
+                        'glow': '0 0 20px rgba(var(--color-brand-500), 0.4)',
+                    },
+                    animation: {
+                        'float': 'float 8s ease-in-out infinite',
+                        'blob': 'blob 10s infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --color-brand-50: #f0fdf4; --color-brand-100: #dcfce7; --color-brand-500: #10b981;
+            --color-brand-600: #059669; --color-brand-700: #047857; --color-brand-900: #064e3b;
+            --color-dark-bg: #111827; --color-dark-panel: #1f293b; --color-dark-border: #374151;
+        }
+        
+        /* Themes - Same as before */
+        [data-theme="cyberpunk"] { --color-brand-50: #1a1a00; --color-brand-100: #333300; --color-brand-500: #fcee0a; --color-brand-600: #d4c806; --color-brand-700: #a39a00; --color-brand-900: #000000; --color-dark-bg: #000000; --color-dark-panel: #09090b; --color-dark-border: #333333; }
+        [data-theme="ocean"] { --color-brand-50: #f0f9ff; --color-brand-100: #e0f2fe; --color-brand-500: #0ea5e9; --color-brand-600: #0284c7; --color-brand-700: #0369a1; --color-brand-900: #0c4a6e; }
+        [data-theme="sunset"] { --color-brand-50: #fff7ed; --color-brand-100: #ffedd5; --color-brand-500: #f97316; --color-brand-600: #ea580c; --color-brand-700: #c2410c; --color-brand-900: #7c2d12; }
+        [data-theme="lavender"] { --color-brand-50: #f5f3ff; --color-brand-100: #ede9fe; --color-brand-500: #8b5cf6; --color-brand-600: #7c3aed; --color-brand-700: #6d28d9; --color-brand-900: #4c1d95; }
+        [data-theme="gamer"] { --color-brand-50: #eef2f5; --color-brand-100: #c7d5e0; --color-brand-500: #66c0f4; --color-brand-600: #0070d1; --color-brand-700: #2a475e; --color-brand-900: #171a21; --color-dark-bg: #121212; --color-dark-panel: #1b2838; --color-dark-border: #2a475e; }
+        [data-theme="turkey"] { --color-brand-50: #fff5f5; --color-brand-100: #fed7d7; --color-brand-500: #E30A17; --color-brand-600: #c53030; --color-brand-700: #9b2c2c; --color-brand-900: #742a2a; --color-dark-bg: #1a0505; --color-dark-panel: #2d0a0a; --color-dark-border: #451a1a; }
+        [data-theme="forest"] { --color-brand-50: #f2fce2; --color-brand-100: #ecfccb; --color-brand-500: #65a30d; --color-brand-600: #4d7c0f; --color-brand-700: #3f6212; --color-brand-900: #1a2e05; --color-dark-bg: #050a00; --color-dark-panel: #141f05; --color-dark-border: #233608; }
+        [data-theme="fire"] { --color-brand-50: #fef2f2; --color-brand-100: #fee2e2; --color-brand-500: #ef4444; --color-brand-600: #dc2626; --color-brand-700: #b91c1c; --color-brand-900: #7f1d1d; --color-dark-bg: #1a0202; --color-dark-panel: #2b0505; --color-dark-border: #450a0a; }
+        [data-theme="royal"] { --color-brand-50: #faf5ff; --color-brand-100: #f3e8ff; --color-brand-500: #d946ef; --color-brand-600: #c026d3; --color-brand-700: #a21caf; --color-brand-900: #701a75; --color-dark-bg: #120114; --color-dark-panel: #220326; --color-dark-border: #380540; }
+        [data-theme="glacier"] { --color-brand-50: #ecfeff; --color-brand-100: #cffafe; --color-brand-500: #06b6d4; --color-brand-600: #0891b2; --color-brand-700: #0e7490; --color-brand-900: #164e63; --color-dark-bg: #011014; --color-dark-panel: #031b21; --color-dark-border: #062c36; }
+
+        [data-theme="turkey"] body::after {
+            content: ''; position: fixed; bottom: 20px; left: 20px; width: 60px; height: 40px;
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/b/b4/Flag_of_Turkey.svg');
+            background-size: contain; background-repeat: no-repeat; opacity: 0.8; z-index: 100;
+            animation: float 4s ease-in-out infinite; pointer-events: none;
+        }
+        [data-theme="turkey"] .glass-panel { border-top: 3px solid #E30A17; }
+        [data-theme="cyberpunk"] .cyber-border { border: 1px solid #fcee0a; box-shadow: 0 0 10px rgba(252, 238, 10, 0.2); }
+        [data-theme="cyberpunk"] .text-brand-500 { text-shadow: 0 0 8px rgba(252, 238, 10, 0.6); }
+
+        body { font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; } /* Fix horizontal scroll */
+        
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+        
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .modal { transition: opacity 0.2s ease, transform 0.2s ease; opacity: 0; pointer-events: none; transform: scale(0.95); }
+        .modal.active { opacity: 1; pointer-events: auto; transform: scale(1); }
+        
+        .radar-spinner { width: 50px; height: 50px; border-radius: 50%; border: 3px solid rgba(var(--color-brand-500), 0.1); border-top-color: var(--color-brand-500); animation: spin 1s infinite linear; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .scan-line { position: absolute; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, var(--color-brand-500), transparent); box-shadow: 0 0 20px var(--color-brand-500); top: 0; left: 0; animation: scanning 2s infinite ease-in-out; z-index: 10; }
+        @keyframes scanning { 0% { top: 0%; opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+        
+        /* Mobile-Friendly Bento Card */
+        .bento-card { 
+            background: rgba(255, 255, 255, 0.7); 
+            backdrop-filter: blur(12px); 
+            border: 1px solid rgba(255, 255, 255, 0.4); 
+            border-radius: 1.25rem; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); 
+        }
+        .dark .bento-card { 
+            background: rgba(30, 41, 59, 0.6); 
+            border-color: rgba(255, 255, 255, 0.05); 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2); 
+        }
+        .bento-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-glow); border-color: rgba(var(--color-brand-500), 0.3); }
+        [data-theme="cyberpunk"] .bento-card { border: 1px solid var(--color-brand-500); box-shadow: 0 0 5px rgba(252, 238, 10, 0.1); border-radius: 0.5rem; }
+        
+        /* Ambient Blobs - Hidden on mobile for performance and layout safety */
+        .ambient-blob { position: absolute; border-radius: 50%; filter: blur(60px); opacity: 0.4; z-index: 0; animation: blob 10s infinite; pointer-events: none; }
+        @media (max-width: 768px) { .ambient-blob { display: none; } }
+        .blob-1 { top: -10%; left: -10%; width: 400px; height: 400px; background-color: var(--color-brand-500); animation-delay: 0s; }
+        .blob-2 { bottom: -10%; right: -10%; width: 400px; height: 400px; background-color: #3b82f6; animation-delay: 2s; }
+        .blob-3 { top: 40%; left: 40%; width: 300px; height: 300px; background-color: #a855f7; animation-delay: 4s; opacity: 0.2; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 dark:bg-dark-bg dark:text-gray-200 h-screen overflow-hidden flex transition-colors duration-300 font-sans selection:bg-brand-500 selection:text-white relative">
+
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+        <div class="ambient-blob blob-1"></div><div class="ambient-blob blob-2"></div><div class="ambient-blob blob-3"></div>
+    </div>
+
+    <!-- SIDEBAR (Desktop) -->
+    <aside class="hidden md:flex flex-col w-20 lg:w-72 h-[94vh] my-auto ml-4 bg-white/80 dark:bg-dark-panel backdrop-blur-xl rounded-3xl border border-white/50 dark:border-white/5 shadow-2xl z-30 transition-all duration-300 relative overflow-hidden">
+        <div class="h-24 flex items-center justify-center lg:justify-start lg:px-8 border-b border-gray-100 dark:border-dark-border">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-600 to-brand-400 flex items-center justify-center text-white shadow-lg shadow-brand-500/30 cursor-pointer hover:scale-105 transition-transform duration-300" onclick="location.reload()">
+                <i class="fas fa-leaf text-xl"></i>
+            </div>
+            <div class="ml-4 hidden lg:block">
+                <h1 class="font-extrabold text-2xl tracking-tight leading-none text-gray-900 dark:text-white">YZDBTKS</h1>
+                <span class="text-[10px] text-brand-600 dark:text-brand-400 font-bold tracking-[0.25em] uppercase">Enterprise</span>
+            </div>
+        </div>
+        <nav class="flex-1 overflow-y-auto py-8 px-4 space-y-2 custom-scrollbar">
+            <!-- Navigation Items (Same as before) -->
+            <div class="hidden lg:block px-4 text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-3">Analiz Merkezi</div>
+            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center justify-center lg:justify-start px-4 py-3.5 rounded-2xl transition-all duration-300 bg-brand-50 text-brand-700 dark:bg-brand-500/20 dark:text-brand-400 font-bold shadow-sm ring-1 ring-brand-100 dark:ring-transparent group relative overflow-hidden cursor-pointer"><i class="fas fa-chart-pie text-xl lg:text-lg lg:mr-3 relative z-10"></i><span class="hidden lg:inline relative z-10">Panel</span></button>
+            <button onclick="switchTab('my-plants')" id="nav-my-plants" class="nav-item w-full flex items-center justify-center lg:justify-start px-4 py-3.5 rounded-2xl text-gray-500 hover:bg-white/50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white transition-all duration-200 font-medium group cursor-pointer"><div class="relative"><i class="fas fa-seedling text-xl lg:text-lg lg:mr-3 group-hover:text-green-500 transition-colors"></i><i class="fas fa-plus absolute -top-1 -right-2 text-[8px] bg-brand-500 text-white rounded-full p-0.5 border border-white dark:border-dark-panel"></i></div><span class="hidden lg:inline">Bitkilerim</span></button>
+            <button onclick="switchTab('history')" id="nav-history" class="nav-item w-full flex items-center justify-center lg:justify-start px-4 py-3.5 rounded-2xl text-gray-500 hover:bg-white/50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white transition-all duration-200 font-medium group cursor-pointer"><i class="fas fa-database text-xl lg:text-lg lg:mr-3 group-hover:text-brand-500 transition-colors"></i><span class="hidden lg:inline">Geçmiş</span></button>
+            <div class="border-t border-gray-100 dark:border-dark-border my-6 mx-2 opacity-50"></div>
+            <div class="hidden lg:block px-4 text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-3">Yönetim</div>
+            <button onclick="switchTab('models')" id="nav-models" class="nav-item w-full flex items-center justify-center lg:justify-start px-4 py-3.5 rounded-2xl text-gray-500 hover:bg-white/50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white transition-all duration-200 font-medium group cursor-pointer"><i class="fas fa-brain text-xl lg:text-lg lg:mr-3 group-hover:text-purple-500 transition-colors"></i><span class="hidden lg:inline">Modeller</span></button>
+            <button onclick="switchTab('settings')" id="nav-settings" class="nav-item w-full flex items-center justify-center lg:justify-start px-4 py-3.5 rounded-2xl text-gray-500 hover:bg-white/50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white transition-all duration-200 font-medium group cursor-pointer"><i class="fas fa-sliders-h text-xl lg:text-lg lg:mr-3 group-hover:text-blue-500 transition-colors"></i><span class="hidden lg:inline">Ayarlar</span></button>
+            <div class="border-t border-gray-100 dark:border-dark-border my-6 mx-2 opacity-50"></div>
+            <button onclick="switchTab('about')" id="nav-about" class="nav-item w-full flex items-center justify-center lg:justify-start px-4 py-3.5 rounded-2xl text-gray-500 hover:bg-white/50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white transition-all duration-200 font-medium group cursor-pointer"><i class="fas fa-info-circle text-xl lg:text-lg lg:mr-3 group-hover:text-orange-500 transition-colors"></i><span class="hidden lg:inline">Hakkında</span></button>
+            <button onclick="switchTab('who-we-are')" id="nav-who-we-are" class="nav-item w-full flex items-center justify-center lg:justify-start px-4 py-3.5 rounded-2xl text-gray-500 hover:bg-white/50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white transition-all duration-200 font-medium group cursor-pointer"><i class="fas fa-users text-xl lg:text-lg lg:mr-3 group-hover:text-pink-500 transition-colors"></i><span class="hidden lg:inline">Ekip</span></button>
+        </nav>
+        <div class="p-6 border-t border-gray-100 dark:border-dark-border bg-gray-50/50 dark:bg-black/10">
+            <button onclick="toggleTheme()" class="w-full flex items-center justify-center lg:justify-between p-3 rounded-2xl bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-500 hover:border-brand-500 dark:hover:border-brand-500 transition-all group mb-4 shadow-sm cursor-pointer">
+                <span class="hidden lg:inline ml-1 text-sm font-bold text-gray-600 dark:text-gray-300">Mod Değiştir</span>
+                <div class="w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/10 flex items-center justify-center group-hover:bg-brand-50 dark:group-hover:bg-brand-900/30 transition-colors"><i class="fas fa-moon dark:hidden text-gray-600"></i><i class="fas fa-sun hidden dark:block text-yellow-400"></i></div>
+            </button>
+            <div id="sidebar-auth-section"></div>
+        </div>
+    </aside>
+
+    <!-- MOBILE HEADER (Fixed Top) -->
+    <header class="md:hidden h-16 bg-white/95 dark:bg-dark-panel/95 backdrop-blur-md border-b border-gray-200 dark:border-dark-border flex items-center justify-between px-4 sticky top-0 z-50">
+        <div class="flex items-center gap-3">
+            <button onclick="toggleMobileSidebar()" class="text-gray-600 dark:text-gray-300 p-2 rounded-lg active:bg-gray-100 dark:active:bg-white/10 cursor-pointer">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+            <span class="font-extrabold text-xl text-brand-600 tracking-tight">YZDBTKS</span>
+        </div>
+        <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-brand-500 to-brand-700 flex items-center justify-center text-white font-bold text-xs shadow-md">
+            <img id="mobile-header-avatar" src="https://ui-avatars.com/api/?name=Guest&background=059669&color=fff" class="w-full h-full rounded-full object-cover">
+        </div>
+    </header>
+
+    <!-- MOBILE SIDEBAR (Overlay) -->
+    <div id="mobile-sidebar-overlay" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-black/60 z-[55] hidden md:hidden backdrop-blur-sm transition-opacity"></div>
+    <div id="mobile-sidebar" class="fixed inset-y-0 left-0 w-3/4 max-w-sm bg-white dark:bg-dark-panel shadow-2xl transform -translate-x-full transition-transform duration-300 md:hidden z-[60] flex flex-col h-full border-r border-gray-200 dark:border-dark-border">
+        <div class="h-16 flex items-center justify-between px-6 border-b border-gray-100 dark:border-dark-border">
+            <span class="font-bold text-xl text-gray-800 dark:text-white">Menü</span>
+            <button onclick="toggleMobileSidebar()" class="text-gray-500 p-2 cursor-pointer"><i class="fas fa-times text-lg"></i></button>
+        </div>
+        <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+            <button onclick="switchTab('dashboard')" class="w-full text-left px-4 py-3.5 rounded-xl bg-brand-50 text-brand-700 font-bold cursor-pointer"><i class="fas fa-chart-pie mr-3"></i> Analiz Paneli</button>
+            <button onclick="switchTab('my-plants')" class="w-full text-left px-4 py-3.5 rounded-xl text-gray-600 hover:bg-gray-50 font-medium cursor-pointer"><i class="fas fa-seedling mr-3"></i> Bitkilerim</button>
+            <button onclick="switchTab('history')" class="w-full text-left px-4 py-3.5 rounded-xl text-gray-600 hover:bg-gray-50 font-medium cursor-pointer"><i class="fas fa-database mr-3"></i> Geçmiş</button>
+            <button onclick="switchTab('models')" class="w-full text-left px-4 py-3.5 rounded-xl text-gray-600 hover:bg-gray-50 font-medium cursor-pointer"><i class="fas fa-brain mr-3"></i> Modeller</button>
+            <button onclick="switchTab('settings')" class="w-full text-left px-4 py-3.5 rounded-xl text-gray-600 hover:bg-gray-50 font-medium cursor-pointer"><i class="fas fa-cog mr-3"></i> Ayarlar</button>
+            <div class="border-t border-gray-100 my-2"></div>
+            <button onclick="switchTab('about')" class="w-full text-left px-4 py-3.5 rounded-xl text-gray-600 font-medium cursor-pointer"><i class="fas fa-info-circle mr-3"></i> Hakkında</button>
+            <button onclick="switchTab('who-we-are')" class="w-full text-left px-4 py-3.5 rounded-xl text-gray-600 font-medium cursor-pointer"><i class="fas fa-users mr-3"></i> Ekibimiz</button>
+            <div class="border-t border-gray-100 my-2"></div>
+            <button onclick="toggleTheme()" class="w-full text-left px-4 py-3.5 rounded-xl text-gray-600 font-medium flex justify-between cursor-pointer"><span>Mod Değiştir</span> <i class="fas fa-adjust"></i></button>
+            <button onclick="openAuthModal()" class="w-full text-left px-4 py-3.5 rounded-xl text-brand-600 font-bold bg-brand-50 cursor-pointer">Oturum Aç</button>
+        </nav>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 h-full overflow-y-auto p-4 md:p-8 lg:p-10 relative scroll-smooth z-10 w-full">
+        <!-- Desktop Header -->
+        <div class="hidden md:flex justify-between items-center mb-10 fade-in">
+            <div><h2 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">Hoşgeldiniz</h2><p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Yapay zeka destekli analiz merkezi.</p></div>
+            <div class="flex items-center gap-3 bg-white/80 dark:bg-dark-panel p-2 rounded-full border border-gray-200 dark:border-dark-border shadow-sm backdrop-blur-md">
+                <button onclick="switchTab('settings')" class="w-10 h-10 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors cursor-pointer"><i class="fas fa-cog"></i></button>
+                <button onclick="toggleTheme()" class="w-10 h-10 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors cursor-pointer"><i class="fas fa-moon dark:hidden"></i><i class="fas fa-sun hidden dark:block text-yellow-400"></i></button>
+                <div class="w-px h-6 bg-gray-200 dark:bg-dark-border"></div>
+                <button class="relative w-10 h-10 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors cursor-pointer"><i class="fas fa-bell"></i><span class="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-dark-panel"></span></button>
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-brand-500 to-brand-700 p-0.5 cursor-pointer shadow-lg shadow-brand-500/30 overflow-hidden"><img id="header-avatar" src="https://ui-avatars.com/api/?name=Guest&background=059669&color=fff" class="w-full h-full rounded-full object-cover"></div>
+            </div>
+        </div>
+
+        <!-- DASHBOARD VIEW -->
+        <div id="view-dashboard" class="space-y-6 max-w-[1800px] mx-auto fade-in pb-24">
+            <!-- Stats -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                <!-- Stat Cards (Simplified for brevity but responsive) -->
+                <div class="bento-card p-5 relative overflow-hidden group"><div class="flex justify-between items-start mb-4"><div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 flex items-center justify-center"><i class="fas fa-camera"></i></div><span class="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-lg">+12%</span></div><div class="text-2xl font-bold text-gray-900 dark:text-white">128</div><div class="text-xs text-gray-500 font-bold uppercase tracking-widest mt-1">Günlük Analiz</div></div>
+                <div class="bento-card p-5 relative overflow-hidden group"><div class="flex justify-between items-start mb-4"><div class="w-10 h-10 rounded-xl bg-green-50 dark:bg-green-900/20 text-green-600 flex items-center justify-center"><i class="fas fa-leaf"></i></div><span class="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-lg">+5%</span></div><div class="text-2xl font-bold text-gray-900 dark:text-white">%98.4</div><div class="text-xs text-gray-500 font-bold uppercase tracking-widest mt-1">Doğruluk</div></div>
+                <div class="bento-card p-5 relative overflow-hidden group"><div class="flex justify-between items-start mb-4"><div class="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 flex items-center justify-center"><i class="fas fa-virus"></i></div><span class="text-xs font-bold text-red-500 bg-red-50 px-2 py-1 rounded-lg">-2%</span></div><div class="text-2xl font-bold text-gray-900 dark:text-white">42</div><div class="text-xs text-gray-500 font-bold uppercase tracking-widest mt-1">Hastalık Tespiti</div></div>
+                <div class="bento-card p-5 relative overflow-hidden group"><div class="flex justify-between items-start mb-4"><div class="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-900/20 text-purple-600 flex items-center justify-center"><i class="fas fa-layer-group"></i></div><span class="text-xs font-bold text-gray-500 bg-gray-100 dark:bg-white/10 px-2 py-1 rounded-lg">Aktif</span></div><div class="text-2xl font-bold text-gray-900 dark:text-white">v2.1</div><div class="text-xs text-gray-500 font-bold uppercase tracking-widest mt-1">Sistem</div></div>
+            </div>
+
+            <!-- Workspace -->
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                <!-- Scanner -->
+                <div class="xl:col-span-2 bento-card p-2 shadow-xl flex flex-col h-auto min-h-[500px] lg:h-[650px] overflow-hidden border-2 border-transparent hover:border-brand-500/20 transition-colors">
+                    <div class="px-5 py-4 border-b border-gray-100 dark:border-dark-border flex justify-between items-center bg-gray-50/50 dark:bg-white/5">
+                        <div class="flex items-center gap-3"><span class="relative flex h-2.5 w-2.5"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-brand-500"></span></span><h2 class="font-bold text-gray-800 dark:text-white text-xs md:text-sm tracking-wide uppercase">Görüntü İşleme İstasyonu</h2></div>
+                        <button onclick="resetAnalysis()" class="text-xs font-bold text-gray-500 hover:text-brand-600 flex items-center gap-2 bg-gray-100 dark:bg-white/10 px-3 py-1.5 rounded-lg"><i class="fas fa-redo"></i> <span class="hidden sm:inline">TEMİZLE</span></button>
+                    </div>
+                    <div class="flex-1 relative bg-gray-900 flex items-center justify-center group overflow-hidden rounded-b-xl min-h-[400px]">
+                        <div class="viewfinder absolute inset-6 md:inset-12 opacity-30 pointer-events-none"><div class="viewfinder-inner w-full h-full"></div></div>
+                        <div id="drop-zone" class="text-center z-10 p-6 transition-all duration-500 w-full">
+                            <div class="w-20 h-20 md:w-32 md:h-32 bg-white/5 rounded-[2rem] flex items-center justify-center mx-auto mb-6 backdrop-blur-md border border-white/10 shadow-2xl animate-float"><i class="fas fa-dna text-4xl md:text-6xl text-brand-400"></i></div>
+                            <h3 class="text-white text-2xl md:text-4xl font-black mb-3 tracking-tight">Görüntü Yükle</h3>
+                            <p class="text-gray-400 text-sm mb-8 max-w-xs mx-auto">Yaprak fotoğrafını yükleyin veya kamerayı başlatın.</p>
+                            <div class="flex flex-col sm:flex-row gap-4 justify-center w-full px-4">
+                                <button onclick="document.getElementById('file-input').click()" class="bg-brand-600 text-white px-6 py-3.5 rounded-xl font-bold text-sm shadow-lg flex items-center justify-center gap-3 w-full sm:w-auto"><i class="fas fa-folder-open"></i> Dosya Seç</button>
+                                <button onclick="document.getElementById('camera-input').click()" class="bg-white/10 text-white px-6 py-3.5 rounded-xl font-bold text-sm backdrop-blur-md border border-white/10 flex items-center justify-center gap-3 w-full sm:w-auto"><i class="fas fa-camera"></i> Kamera</button>
+                            </div>
+                            <input type="file" id="file-input" class="hidden" accept="image/*" onchange="handleFile(event)">
+                            <input type="file" id="camera-input" class="hidden" accept="image/*" capture="environment" onchange="handleFile(event)">
+                        </div>
+                        <img id="preview-img" class="hidden w-full h-full object-contain z-10" src="" alt="Analiz">
+                        <div id="scanner-overlay" class="hidden absolute inset-0 bg-black/80 z-20 backdrop-blur-sm flex flex-col items-center justify-center"><div class="radar-spinner mb-6"></div><div class="text-center text-brand-400 font-bold tracking-widest animate-pulse">ANALİZ EDİLİYOR...</div></div>
+                    </div>
+                </div>
+
+                <!-- Right: Results -->
+                <div class="xl:col-span-1 flex flex-col gap-6">
+                    <div class="bento-card flex-1 flex flex-col overflow-hidden relative shadow-lg border-t-4 border-t-brand-500 min-h-[400px]">
+                        <div class="p-5 border-b border-gray-100 dark:border-dark-border flex justify-between items-center bg-gray-50/50 dark:bg-white/5"><h3 class="font-extrabold text-lg text-gray-800 dark:text-white">Analiz Raporu</h3></div>
+                        <div id="res-empty" class="absolute inset-0 top-16 flex flex-col items-center justify-center bg-white/95 dark:bg-dark-panel z-10">
+                            <div class="w-16 h-16 bg-gray-100 dark:bg-white/5 rounded-3xl flex items-center justify-center mb-4 text-gray-300 dark:text-gray-600"><i class="fas fa-file-medical-alt text-3xl"></i></div>
+                            <p class="text-sm font-extrabold text-gray-400 uppercase tracking-widest">Veri Bekleniyor</p>
+                        </div>
+                        <div id="res-content" class="hidden flex-1 flex flex-col p-6 overflow-y-auto custom-scrollbar">
+                            <div class="flex items-start gap-4 mb-6">
+                                <div id="res-icon-bg" class="w-14 h-14 rounded-2xl flex shrink-0 items-center justify-center bg-gray-100 text-2xl shadow-md"><i id="res-icon" class="fas fa-question"></i></div>
+                                <div><span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Durum</span><h2 id="res-title" class="text-lg font-black text-gray-900 dark:text-white leading-tight mt-1">--</h2></div>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="relative pl-4 border-l-2 border-gray-200 dark:border-dark-border"><h4 class="text-xs font-bold text-gray-900 dark:text-white mb-1 uppercase">Bulgular</h4><p id="res-desc" class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">--</p></div>
+                                <div class="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-2xl border border-blue-100 dark:border-blue-900/20"><h4 class="text-xs font-bold text-blue-900 dark:text-blue-100 mb-2 uppercase"><i class="fas fa-notes-medical mr-1"></i> Tedavi</h4><p id="res-action" class="text-sm text-blue-800 dark:text-blue-200">--</p></div>
+                            </div>
+                            <button onclick="saveResult()" class="mt-8 w-full py-3.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-2xl font-bold text-sm shadow-xl flex items-center justify-center gap-2"><i class="fas fa-save"></i> Kaydet ve İndir</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MY PLANTS VIEW -->
+        <div id="view-my-plants" class="hidden max-w-7xl mx-auto fade-in pb-24">
+             <div class="flex justify-between items-end mb-8">
+                <div><h2 class="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white">Bitkilerim</h2><p class="text-gray-500 text-sm mt-1">Takip ettiğiniz bitkiler.</p></div>
+                <button onclick="openAddPlantModal()" class="px-5 py-2.5 bg-brand-600 text-white rounded-xl text-sm font-bold shadow-lg flex items-center gap-2"><i class="fas fa-plus"></i> <span class="hidden sm:inline">Bitki Ekle</span></button>
+            </div>
+            <div id="my-plants-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+            <div id="my-plants-empty" class="bento-card p-12 text-center flex flex-col items-center">
+                <div class="w-20 h-20 bg-gray-100 dark:bg-white/5 rounded-full flex items-center justify-center mb-4 text-gray-300"><i class="fas fa-seedling text-3xl"></i></div>
+                <p class="text-gray-500 font-medium">Henüz bitki yok.</p>
+            </div>
+        </div>
+
+        <!-- HISTORY VIEW -->
+        <div id="view-history" class="hidden max-w-7xl mx-auto fade-in pb-24">
+            <div class="flex justify-between items-center mb-8"><h2 class="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white">Analiz Geçmişi</h2><button onclick="clearHistory()" class="text-sm text-red-500 font-bold border border-red-200 px-4 py-2 rounded-lg">Temizle</button></div>
+            <div class="bento-card overflow-hidden shadow-lg overflow-x-auto">
+                <table class="w-full text-left text-sm text-gray-600 dark:text-gray-400 min-w-[600px]">
+                    <thead class="bg-gray-50 dark:bg-black/20 text-xs font-bold uppercase tracking-wider"><tr><th class="px-6 py-4">Tarih</th><th class="px-6 py-4">Sonuç</th><th class="px-6 py-4">Skor</th></tr></thead>
+                    <tbody id="history-table-body" class="divide-y divide-gray-100 dark:divide-dark-border"></tbody>
+                </table>
+                <div id="history-empty" class="p-12 text-center hidden"><p class="text-gray-400">Kayıt yok.</p></div>
+            </div>
+        </div>
+        
+        <!-- Placeholder for other views (Models, Settings, etc.) to prevent errors -->
+        <div id="view-models" class="hidden fade-in p-8 text-center text-gray-500">Modeller Sayfası</div>
+        <div id="view-settings" class="hidden fade-in p-8 text-center text-gray-500">Ayarlar Sayfası</div>
+        <div id="view-about" class="hidden fade-in p-8 text-center text-gray-500">Hakkında Sayfası</div>
+        <div id="view-who-we-are" class="hidden fade-in p-8 text-center text-gray-500">Ekip Sayfası</div>
+
+    </main>
+    
+    <!-- MODALS -->
+    <!-- Add Plant Modal -->
+    <div id="add-plant-modal" class="modal fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-black/50 hidden px-4">
+        <div class="bg-white dark:bg-dark-panel w-full max-w-md rounded-3xl shadow-2xl p-6 md:p-8 relative">
+            <button onclick="closeAddPlantModal()" class="absolute top-4 right-4 text-gray-400"><i class="fas fa-times"></i></button>
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Bitki Ekle</h2>
+            <form onsubmit="handleAddPlant(event)" class="space-y-4">
+                <input type="text" id="plant-name" class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-dark-border dark:bg-black/30 outline-none focus:border-brand-500" placeholder="Bitki Adı" required>
+                <div class="flex gap-2">
+                    <button type="button" onclick="document.getElementById('plant-image-file').click()" class="flex-1 py-3 bg-gray-100 dark:bg-white/10 rounded-xl text-sm font-bold"><i class="fas fa-folder-open mr-2"></i> Seç</button>
+                    <button type="button" onclick="document.getElementById('plant-image-camera').click()" class="flex-1 py-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-xl text-sm font-bold"><i class="fas fa-camera mr-2"></i> Çek</button>
+                </div>
+                <input type="file" id="plant-image-file" class="hidden" accept="image/*" onchange="previewPlantImage(this)">
+                <input type="file" id="plant-image-camera" class="hidden" accept="image/*" capture="environment" onchange="previewPlantImage(this)">
+                
+                <div id="plant-image-preview-container" class="hidden mt-4 relative rounded-xl overflow-hidden h-40 bg-gray-100">
+                    <img id="plant-image-preview" src="" class="w-full h-full object-cover">
+                    <button type="button" onclick="downloadPlantPDF()" class="absolute bottom-2 right-2 bg-red-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg flex items-center gap-1"><i class="fas fa-file-pdf"></i> PDF</button>
+                </div>
+                
+                <button type="submit" class="w-full py-3 bg-brand-600 text-white font-bold rounded-xl shadow-lg mt-4">Kaydet</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Auth Modal (Simplified for brevity) -->
+    <div id="auth-modal" class="modal fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-black/50 hidden px-4">
+        <div class="bg-white dark:bg-dark-panel w-full max-w-sm rounded-3xl shadow-2xl p-8 relative">
+            <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-gray-400"><i class="fas fa-times"></i></button>
+            <div class="text-center mb-6"><h2 class="text-2xl font-bold text-gray-900 dark:text-white">Giriş Yap</h2></div>
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <input type="text" class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-dark-border dark:bg-black/30" placeholder="E-posta">
+                <input type="password" class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-dark-border dark:bg-black/30" placeholder="Şifre">
+                <button type="submit" class="w-full py-3 bg-brand-600 text-white font-bold rounded-xl shadow-lg">Giriş Yap</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Core Logic
+        function toggleMobileSidebar() { 
+            const sb = document.getElementById('mobile-sidebar');
+            const overlay = document.getElementById('mobile-sidebar-overlay');
+            if (sb.classList.contains('-translate-x-full')) {
+                sb.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+                setTimeout(() => overlay.classList.remove('opacity-0'), 10); // Fade in
+            } else {
+                sb.classList.add('-translate-x-full');
+                overlay.classList.add('opacity-0');
+                setTimeout(() => overlay.classList.add('hidden'), 300); // Fade out
+            }
+        }
+        
+        function switchTab(tabId) {
+            ['dashboard', 'history', 'models', 'settings', 'about', 'who-we-are', 'my-plants'].forEach(id => {
+                const el = document.getElementById('view-' + id);
+                if(el) el.classList.add('hidden');
+                // Optional: Update nav active states here
+            });
+            const view = document.getElementById('view-' + tabId);
+            if(view) { view.classList.remove('hidden'); view.classList.add('fade-in'); }
+            
+            if(tabId === 'history') updateHistoryTable();
+            if(tabId === 'my-plants') updateMyPlantsGrid();
+            
+            // Close mobile sidebar if open
+            const sb = document.getElementById('mobile-sidebar');
+            if (!sb.classList.contains('-translate-x-full')) toggleMobileSidebar();
+        }
+
+        // Auth Logic
+        let isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+        let user = { name: "Demo Hesap", avatar: "https://ui-avatars.com/api/?name=Demo&background=059669&color=fff" };
+        
+        function checkAuth() {
+            // Update sidebar auth section based on login state
+            const areas = [document.getElementById('sidebar-auth-section')]; // Add mobile auth area if needed
+            // Simplified logic for brevity
+        }
+        function openAuthModal() { 
+            document.getElementById('auth-modal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('auth-modal').classList.add('active'), 10);
+        }
+        function closeAuthModal() {
+            document.getElementById('auth-modal').classList.remove('active');
+            setTimeout(() => document.getElementById('auth-modal').classList.add('hidden'), 300);
+        }
+        function handleLogin(e) {
+            e.preventDefault();
+            isLoggedIn = true;
+            localStorage.setItem('isLoggedIn', 'true');
+            closeAuthModal();
+            alert("Giriş Başarılı");
+            checkAuth();
+        }
+
+        // Plant Logic
+        let pendingPlantImage = null;
+        function openAddPlantModal() {
+            document.getElementById('add-plant-modal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('add-plant-modal').classList.add('active'), 10);
+            document.getElementById('plant-name').value = '';
+            document.getElementById('plant-image-preview-container').classList.add('hidden');
+            pendingPlantImage = null;
+        }
+        function closeAddPlantModal() {
+            document.getElementById('add-plant-modal').classList.remove('active');
+            setTimeout(() => document.getElementById('add-plant-modal').classList.add('hidden'), 300);
+        }
+        function previewPlantImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    pendingPlantImage = e.target.result;
+                    document.getElementById('plant-image-preview').src = pendingPlantImage;
+                    document.getElementById('plant-image-preview-container').classList.remove('hidden');
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+        function handleAddPlant(e) {
+            e.preventDefault();
+            const name = document.getElementById('plant-name').value;
+            if(!pendingPlantImage) { alert("Resim seçiniz"); return; }
+            const plants = JSON.parse(localStorage.getItem('myPlants') || '[]');
+            plants.push({ name, image: pendingPlantImage, date: new Date().toLocaleDateString() });
+            localStorage.setItem('myPlants', JSON.stringify(plants));
+            updateMyPlantsGrid();
+            closeAddPlantModal();
+        }
+        function updateMyPlantsGrid() {
+            const plants = JSON.parse(localStorage.getItem('myPlants') || '[]');
+            const grid = document.getElementById('my-plants-grid');
+            const empty = document.getElementById('my-plants-empty');
+            grid.innerHTML = '';
+            if(plants.length === 0) { empty.classList.remove('hidden'); }
+            else {
+                empty.classList.add('hidden');
+                plants.forEach(p => {
+                    grid.innerHTML += `
+                    <div class="bento-card overflow-hidden group">
+                        <div class="h-40 overflow-hidden relative">
+                            <img src="${p.image}" class="w-full h-full object-cover">
+                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                <button onclick="deletePlant('${p.name}')" class="bg-red-500 text-white p-2 rounded-full"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                        <div class="p-4"><h3 class="font-bold text-gray-900 dark:text-white">${p.name}</h3></div>
+                    </div>`;
+                });
+            }
+        }
+        function deletePlant(n) {
+            if(confirm('Silinsin mi?')) {
+                let p = JSON.parse(localStorage.getItem('myPlants') || '[]');
+                p = p.filter(x => x.name !== n);
+                localStorage.setItem('myPlants', JSON.stringify(p));
+                updateMyPlantsGrid();
+            }
+        }
+        function downloadPlantPDF() {
+            if(!pendingPlantImage) return;
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.text("Bitki Kaydı", 10, 10);
+            doc.addImage(pendingPlantImage, 'JPEG', 10, 20, 100, 100);
+            doc.save("bitki.pdf");
+        }
+
+        // Analysis Logic (Simplified for brevity)
+        function handleFile(e) {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                document.getElementById('drop-zone').classList.add('hidden');
+                document.getElementById('preview-img').src = ev.target.result;
+                document.getElementById('preview-img').classList.remove('hidden');
+                document.getElementById('scanner-overlay').classList.remove('hidden');
+                setTimeout(() => {
+                    document.getElementById('scanner-overlay').classList.add('hidden');
+                    document.getElementById('res-empty').classList.add('hidden');
+                    document.getElementById('res-content').classList.remove('hidden');
+                    // Mock result population
+                    document.getElementById('res-title').innerText = "Erken Yanıklık";
+                    document.getElementById('res-score').innerText = "%96";
+                    document.getElementById('res-desc').innerText = "Yaprak yüzeyinde lekeler.";
+                    document.getElementById('res-action').innerText = "Fungisit uygulayın.";
+                }, 2000);
+            }
+            reader.readAsDataURL(e.target.files[0]);
+        }
+        function resetAnalysis() {
+            document.getElementById('drop-zone').classList.remove('hidden');
+            document.getElementById('preview-img').classList.add('hidden');
+            document.getElementById('res-content').classList.add('hidden');
+            document.getElementById('res-empty').classList.remove('hidden');
+        }
+        
+        // Init
+        checkAuth();
+        // Check theme
+        if(localStorage.getItem('appTheme') === 'cyberpunk') document.documentElement.classList.add('dark');
+    </script>
+</body>
+</html>
