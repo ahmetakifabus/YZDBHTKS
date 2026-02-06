@@ -3,22 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>YZDBTKS v8.6 - Kararlı Sürüm</title>
+    <title>YZDBTKS v9.5 - Tek Sayfa Panel</title>
     
     <link rel="icon" href="image_4067b1.png" type="image/png">
 
     <!-- jsPDF Kütüphanesi -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-    <!-- Tailwind CSS ve Yapılandırma -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        // Tailwind Nesnesi Güvenli Başlatma (Hata Önleyici)
-        if (typeof tailwind === 'undefined') {
-            window.tailwind = { config: {} }; // Dummy object to prevent ReferenceError
-            console.warn("Tailwind CSS yüklenemedi. Stil özellikleri çalışmayabilir. İnternet bağlantınızı kontrol edin.");
-        }
-
         try {
             tailwind.config = {
                 darkMode: 'class',
@@ -67,7 +61,7 @@
                 }
             }
         } catch (e) {
-            console.warn("Tailwind yapılandırma hatası, varsayılan ayarlar kullanılıyor.", e);
+            console.warn("Tailwind config error", e);
         }
     </script>
     
@@ -88,11 +82,8 @@
         [data-theme="lavender"] { --color-brand-50: #f5f3ff; --color-brand-100: #ede9fe; --color-brand-500: #8b5cf6; --color-brand-600: #7c3aed; --color-brand-700: #6d28d9; --color-brand-900: #4c1d95; }
         [data-theme="gamer"] { --color-brand-50: #eef2f5; --color-brand-100: #c7d5e0; --color-brand-500: #66c0f4; --color-brand-600: #0070d1; --color-brand-700: #2a475e; --color-brand-900: #171a21; --color-dark-bg: #121212; --color-dark-panel: #1b2838; --color-dark-border: #2a475e; }
         [data-theme="turkey"] { --color-brand-50: #fff5f5; --color-brand-100: #fed7d7; --color-brand-500: #E30A17; --color-brand-600: #c53030; --color-brand-700: #9b2c2c; --color-brand-900: #742a2a; --color-dark-bg: #1a0505; --color-dark-panel: #2d0a0a; --color-dark-border: #451a1a; }
-        [data-theme="forest"] { --color-brand-50: #f2fce2; --color-brand-100: #ecfccb; --color-brand-500: #65a30d; --color-brand-600: #4d7c0f; --color-brand-700: #3f6212; --color-brand-900: #1a2e05; --color-dark-bg: #050a00; --color-dark-panel: #141f05; --color-dark-border: #233608; }
-        [data-theme="fire"] { --color-brand-50: #fef2f2; --color-brand-100: #fee2e2; --color-brand-500: #ef4444; --color-brand-600: #dc2626; --color-brand-700: #b91c1c; --color-brand-900: #7f1d1d; --color-dark-bg: #1a0202; --color-dark-panel: #2b0505; --color-dark-border: #450a0a; }
-        [data-theme="royal"] { --color-brand-50: #faf5ff; --color-brand-100: #f3e8ff; --color-brand-500: #d946ef; --color-brand-600: #c026d3; --color-brand-700: #a21caf; --color-brand-900: #701a75; --color-dark-bg: #120114; --color-dark-panel: #220326; --color-dark-border: #380540; }
-        [data-theme="glacier"] { --color-brand-50: #ecfeff; --color-brand-100: #cffafe; --color-brand-500: #06b6d4; --color-brand-600: #0891b2; --color-brand-700: #0e7490; --color-brand-900: #164e63; --color-dark-bg: #011014; --color-dark-panel: #031b21; --color-dark-border: #062c36; }
-
+        
+        /* Türkiye Teması Özel Efekt */
         [data-theme="turkey"] body::after {
             content: ''; position: fixed; bottom: 20px; left: 100px; width: 60px; height: 40px;
             background-image: url('https://upload.wikimedia.org/wikipedia/commons/b/b4/Flag_of_Turkey.svg');
@@ -147,8 +138,18 @@
         
         .glass-panel { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.5); }
         .dark .glass-panel { background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); }
+        
+        /* Nav Item Styles */
+        .nav-item.active { background-color: var(--color-brand-50); color: var(--color-brand-700); }
+        .dark .nav-item.active { background-color: rgba(16, 185, 129, 0.1); color: var(--color-brand-500); }
+        
+        /* Loader */
+        #global-loader { position: fixed; inset: 0; background: #111827; z-index: 99999; display: flex; justify-content: center; align-items: center; flex-direction: column; transition: opacity 0.5s; }
+        .loader-spin { width: 50px; height: 50px; border: 4px solid #374151; border-top-color: #10b981; border-radius: 50%; animation: spin 1s infinite linear; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Arka Plan */
         .ambient-blob { position: absolute; border-radius: 50%; filter: blur(60px); opacity: 0.4; z-index: 0; animation: blob 10s infinite; pointer-events: none; }
-        @media (max-width: 768px) { .ambient-blob { display: none; } }
         .blob-1 { top: -10%; left: -10%; width: 400px; height: 400px; background-color: var(--color-brand-500); animation-delay: 0s; }
         .blob-2 { bottom: -10%; right: -10%; width: 400px; height: 400px; background-color: #3b82f6; animation-delay: 2s; }
         .blob-3 { top: 40%; left: 40%; width: 300px; height: 300px; background-color: #a855f7; animation-delay: 4s; opacity: 0.2; }
@@ -156,6 +157,14 @@
 </head>
 <body class="bg-gray-100 text-gray-800 dark:bg-dark-bg dark:text-gray-200 h-screen overflow-hidden flex transition-colors duration-300 font-sans selection:bg-brand-500 selection:text-white relative">
 
+    <!-- GLOBAL LOADER -->
+    <div id="global-loader">
+        <div class="loader-spin"></div>
+        <div class="text-white mt-4 font-bold tracking-widest text-sm">SİSTEM YÜKLENİYOR...</div>
+        <button onclick="document.getElementById('global-loader').style.display='none'" class="mt-4 text-xs text-gray-500 underline cursor-pointer hover:text-white">Takılırsa Tıkla</button>
+    </div>
+
+    <!-- BACKGROUND -->
     <div class="fixed inset-0 overflow-hidden pointer-events-none">
         <div class="ambient-blob blob-1"></div><div class="ambient-blob blob-2"></div><div class="ambient-blob blob-3"></div>
     </div>
@@ -174,22 +183,19 @@
 
         <nav class="flex-1 overflow-y-auto py-8 px-4 space-y-2 custom-scrollbar">
             <div class="hidden lg:block px-4 text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-3">Analiz Merkezi</div>
-            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center justify-center lg:justify-start px-4 py-3.5 rounded-2xl transition-all duration-300 bg-brand-50 text-brand-700 dark:bg-brand-500/20 dark:text-brand-400 font-bold shadow-sm ring-1 ring-brand-100 dark:ring-transparent group relative overflow-hidden cursor-pointer"><div class="absolute inset-0 bg-brand-500/10 translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-300"></div><i class="fas fa-chart-pie text-xl lg:text-lg lg:mr-3 relative z-10"></i><span class="hidden lg:inline relative z-10">Panel</span></button>
-            <button onclick="switchTab('history')" id="nav-history" class="nav-item w-full flex items-center justify-center lg:justify-start px-4 py-3.5 rounded-2xl text-gray-500 hover:bg-white/50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white transition-all duration-200 font-medium group cursor-pointer"><i class="fas fa-database text-xl lg:text-lg lg:mr-3 group-hover:text-brand-500 transition-colors"></i><span class="hidden lg:inline">Geçmiş</span></button>
-            <button onclick="switchTab('my-plants')" id="nav-my-plants" class="nav-item w-full flex items-center justify-center lg:justify-start px-4 py-3.5 rounded-2xl text-gray-500 hover:bg-white/50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white transition-all duration-200 font-medium group cursor-pointer">
-                <div class="relative"><i class="fas fa-seedling text-xl lg:text-lg lg:mr-3 group-hover:text-green-500 transition-colors"></i><i class="fas fa-plus absolute -top-1 -right-2 text-[8px] bg-brand-500 text-white rounded-full p-0.5 border border-white dark:border-dark-panel"></i></div>
-                <span class="hidden lg:inline">Bitkilerim</span>
-            </button>
+            <button onclick="scrollToSection('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center justify-center lg:justify-start px-4 py-3.5 rounded-2xl transition-all duration-300 text-gray-600 hover:bg-white/50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white font-medium group cursor-pointer active"><i class="fas fa-chart-pie text-xl lg:text-lg lg:mr-3"></i><span class="hidden lg:inline">Panel</span></button>
+            <button onclick="scrollToSection('my-plants')" id="nav-my-plants" class="nav-item w-full flex items-center justify-center lg:justify-start px-4 py-3.5 rounded-2xl text-gray-500 hover:bg-white/50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white transition-all duration-200 font-medium group cursor-pointer"><i class="fas fa-seedling text-xl lg:text-lg lg:mr-3 group-hover:text-green-500 transition-colors"></i><span class="hidden lg:inline">Bitkilerim</span></button>
+            <button onclick="scrollToSection('history')" id="nav-history" class="nav-item w-full flex items-center justify-center lg:justify-start px-4 py-3.5 rounded-2xl text-gray-500 hover:bg-white/50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white transition-all duration-200 font-medium group cursor-pointer"><i class="fas fa-database text-xl lg:text-lg lg:mr-3 group-hover:text-brand-500 transition-colors"></i><span class="hidden lg:inline">Geçmiş</span></button>
             
             <div class="border-t border-gray-100 dark:border-dark-border my-6 mx-2 opacity-50"></div>
             <div class="hidden lg:block px-4 text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-3">Yönetim</div>
-            <button onclick="switchTab('models')" id="nav-models" class="nav-item w-full flex items-center justify-center lg:justify-start px-4 py-3.5 rounded-2xl text-gray-500 hover:bg-white/50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white transition-all duration-200 font-medium group cursor-pointer"><i class="fas fa-brain text-xl lg:text-lg lg:mr-3 group-hover:text-purple-500 transition-colors"></i><span class="hidden lg:inline">Modeller</span></button>
-            <button onclick="switchTab('settings')" id="nav-settings" class="nav-item w-full flex items-center justify-center lg:justify-start px-4 py-3.5 rounded-2xl text-gray-500 hover:bg-white/50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white transition-all duration-200 font-medium group cursor-pointer"><i class="fas fa-sliders-h text-xl lg:text-lg lg:mr-3 group-hover:text-blue-500 transition-colors"></i><span class="hidden lg:inline">Ayarlar</span></button>
+            <button onclick="scrollToSection('models')" id="nav-models" class="nav-item w-full flex items-center justify-center lg:justify-start px-4 py-3.5 rounded-2xl text-gray-500 hover:bg-white/50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white transition-all duration-200 font-medium group cursor-pointer"><i class="fas fa-brain text-xl lg:text-lg lg:mr-3 group-hover:text-purple-500 transition-colors"></i><span class="hidden lg:inline">Modeller</span></button>
+            <button onclick="scrollToSection('settings')" id="nav-settings" class="nav-item w-full flex items-center justify-center lg:justify-start px-4 py-3.5 rounded-2xl text-gray-500 hover:bg-white/50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white transition-all duration-200 font-medium group cursor-pointer"><i class="fas fa-sliders-h text-xl lg:text-lg lg:mr-3 group-hover:text-blue-500 transition-colors"></i><span class="hidden lg:inline">Ayarlar</span></button>
             
             <div class="border-t border-gray-100 dark:border-dark-border my-6 mx-2 opacity-50"></div>
             <div class="hidden lg:block px-4 text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-3">Kurumsal</div>
-            <button onclick="switchTab('about')" id="nav-about" class="nav-item w-full flex items-center justify-center lg:justify-start px-4 py-3.5 rounded-2xl text-gray-500 hover:bg-white/50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white transition-all duration-200 font-medium group cursor-pointer"><i class="fas fa-info-circle text-xl lg:text-lg lg:mr-3 group-hover:text-orange-500 transition-colors"></i><span class="hidden lg:inline">Hakkında</span></button>
-            <button onclick="switchTab('who-we-are')" id="nav-who-we-are" class="nav-item w-full flex items-center justify-center lg:justify-start px-4 py-3.5 rounded-2xl text-gray-500 hover:bg-white/50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white transition-all duration-200 font-medium group cursor-pointer"><i class="fas fa-users text-xl lg:text-lg lg:mr-3 group-hover:text-pink-500 transition-colors"></i><span class="hidden lg:inline">Ekip</span></button>
+            <button onclick="scrollToSection('about')" id="nav-about" class="nav-item w-full flex items-center justify-center lg:justify-start px-4 py-3.5 rounded-2xl text-gray-500 hover:bg-white/50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white transition-all duration-200 font-medium group cursor-pointer"><i class="fas fa-info-circle text-xl lg:text-lg lg:mr-3 group-hover:text-orange-500 transition-colors"></i><span class="hidden lg:inline">Hakkında</span></button>
+            <button onclick="scrollToSection('who-we-are')" id="nav-who-we-are" class="nav-item w-full flex items-center justify-center lg:justify-start px-4 py-3.5 rounded-2xl text-gray-500 hover:bg-white/50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white transition-all duration-200 font-medium group cursor-pointer"><i class="fas fa-users text-xl lg:text-lg lg:mr-3 group-hover:text-pink-500 transition-colors"></i><span class="hidden lg:inline">Ekip</span></button>
         </nav>
 
         <div class="p-6 border-t border-gray-100 dark:border-dark-border bg-gray-50/50 dark:bg-black/10">
@@ -226,14 +232,14 @@
             <button onclick="document.getElementById('mobile-sidebar').classList.add('-translate-x-full')" class="text-gray-500 p-2 cursor-pointer"><i class="fas fa-times text-lg"></i></button>
         </div>
         <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
-            <button onclick="switchTab('dashboard')" class="w-full text-left px-4 py-3.5 rounded-xl bg-brand-50 text-brand-700 font-bold cursor-pointer">Analiz Paneli</button>
-            <button onclick="switchTab('my-plants')" class="w-full text-left px-4 py-3.5 rounded-xl text-gray-600 hover:bg-gray-50 font-medium cursor-pointer">Bitkilerim <span class="bg-brand-100 text-brand-700 px-2 py-0.5 rounded-full text-xs ml-2">+</span></button>
-            <button onclick="switchTab('history')" class="w-full text-left px-4 py-3.5 rounded-xl text-gray-600 hover:bg-gray-50 font-medium cursor-pointer">Geçmiş</button>
-            <button onclick="switchTab('models')" class="w-full text-left px-4 py-3.5 rounded-xl text-gray-600 hover:bg-gray-50 font-medium cursor-pointer">Modeller</button>
-            <button onclick="switchTab('settings')" class="w-full text-left px-4 py-3.5 rounded-xl text-gray-600 hover:bg-gray-50 font-medium cursor-pointer">Ayarlar</button>
+            <button onclick="scrollToSection('dashboard')" class="w-full text-left px-4 py-3.5 rounded-xl bg-brand-50 text-brand-700 font-bold cursor-pointer">Analiz Paneli</button>
+            <button onclick="scrollToSection('my-plants')" class="w-full text-left px-4 py-3.5 rounded-xl text-gray-600 hover:bg-gray-50 font-medium cursor-pointer">Bitkilerim <span class="bg-brand-100 text-brand-700 px-2 py-0.5 rounded-full text-xs ml-2">+</span></button>
+            <button onclick="scrollToSection('history')" class="w-full text-left px-4 py-3.5 rounded-xl text-gray-600 hover:bg-gray-50 font-medium cursor-pointer">Geçmiş</button>
+            <button onclick="scrollToSection('models')" class="w-full text-left px-4 py-3.5 rounded-xl text-gray-600 hover:bg-gray-50 font-medium cursor-pointer">Modeller</button>
+            <button onclick="scrollToSection('settings')" class="w-full text-left px-4 py-3.5 rounded-xl text-gray-600 hover:bg-gray-50 font-medium cursor-pointer">Ayarlar</button>
             <div class="border-t border-gray-100 my-2"></div>
-            <button onclick="switchTab('about')" class="w-full text-left px-4 py-3.5 rounded-xl text-gray-600 font-medium cursor-pointer">Hakkında</button>
-            <button onclick="switchTab('who-we-are')" class="w-full text-left px-4 py-3.5 rounded-xl text-gray-600 font-medium cursor-pointer">Ekibimiz</button>
+            <button onclick="scrollToSection('about')" class="w-full text-left px-4 py-3.5 rounded-xl text-gray-600 font-medium cursor-pointer">Hakkında</button>
+            <button onclick="scrollToSection('who-we-are')" class="w-full text-left px-4 py-3.5 rounded-xl text-gray-600 font-medium cursor-pointer">Ekibimiz</button>
             <div class="border-t border-gray-100 my-2"></div>
             <button onclick="toggleTheme()" class="w-full text-left px-4 py-3.5 rounded-xl text-gray-600 font-medium flex justify-between cursor-pointer"><span>Mod Değiştir</span> <i class="fas fa-adjust"></i></button>
             <button onclick="openAuthModal()" class="w-full text-left px-4 py-3.5 rounded-xl text-brand-600 font-bold bg-brand-50 cursor-pointer">Oturum Aç</button>
@@ -241,7 +247,8 @@
     </div>
 
     <!-- MAIN CONTENT AREA -->
-    <main class="flex-1 h-full overflow-y-auto p-4 md:p-8 lg:p-10 relative scroll-smooth z-10 w-full">
+    <main class="flex-1 h-full overflow-y-auto p-4 md:p-8 lg:p-10 relative scroll-smooth z-10 w-full" id="main-scroll-area">
+        
         <!-- Desktop Header -->
         <div class="hidden md:flex justify-between items-center mb-10 fade-in">
             <div>
@@ -251,7 +258,7 @@
             
             <!-- Quick Actions -->
             <div class="flex items-center gap-3 bg-white/80 dark:bg-dark-panel p-2 rounded-full border border-gray-200 dark:border-dark-border shadow-sm backdrop-blur-md">
-                <button onclick="switchTab('settings')" class="w-10 h-10 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors cursor-pointer" title="Ayarlar">
+                <button onclick="scrollToSection('settings')" class="w-10 h-10 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors cursor-pointer" title="Ayarlar">
                     <i class="fas fa-cog"></i>
                 </button>
                 <button onclick="toggleTheme()" class="w-10 h-10 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors cursor-pointer" title="Tema">
@@ -269,8 +276,8 @@
             </div>
         </div>
 
-        <!-- DASHBOARD VIEW -->
-        <div id="view-dashboard" class="space-y-6 max-w-[1800px] mx-auto fade-in pb-24">
+        <!-- SECTION: DASHBOARD -->
+        <div id="dashboard" class="space-y-6 max-w-[1800px] mx-auto pb-24 scroll-mt-6">
             <!-- Stats -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                 <div class="bento-card p-5 relative overflow-hidden group"><div class="flex justify-between items-start mb-4"><div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 flex items-center justify-center shadow-sm"><i class="fas fa-camera text-xl"></i></div><span class="text-xs font-bold text-green-600 bg-green-50 dark:bg-green-900/20 px-2.5 py-1 rounded-lg border border-green-100 dark:border-green-900/30">+12%</span></div><div class="text-2xl font-bold text-gray-900 dark:text-white">128</div><div class="text-xs text-gray-500 font-bold uppercase tracking-widest mt-1">Günlük Analiz</div></div>
@@ -306,7 +313,7 @@
                 </div>
 
                 <!-- Right: Results -->
-                <div class="xl:col-span-1 flex flex-col gap-6">
+                <div class="xl:col-span-1 flex flex-col gap-6 h-[650px]">
                     <div class="bento-card flex-1 flex flex-col overflow-hidden relative shadow-lg border-t-4 border-t-brand-500 min-h-[400px]">
                         <div class="p-5 border-b border-gray-100 dark:border-dark-border flex justify-between items-center bg-gray-50/50 dark:bg-white/5"><h3 class="font-extrabold text-lg text-gray-800 dark:text-white">Analiz Raporu</h3><div class="flex gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-red-400"></span><span class="w-2.5 h-2.5 rounded-full bg-yellow-400"></span><span class="w-2.5 h-2.5 rounded-full bg-green-400"></span></div></div>
                         <div id="res-empty" class="absolute inset-0 top-16 flex flex-col items-center justify-center bg-white/95 dark:bg-dark-panel z-10 backdrop-blur-sm">
@@ -333,8 +340,8 @@
             </div>
         </div>
 
-        <!-- MY PLANTS VIEW -->
-        <div id="view-my-plants" class="hidden max-w-7xl mx-auto fade-in pb-24">
+        <!-- SECTION: MY PLANTS -->
+        <div id="my-plants" class="space-y-6 pb-24 scroll-mt-10">
              <div class="flex justify-between items-end mb-8">
                 <div><h2 class="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white">Bitkilerim</h2><p class="text-gray-500 text-sm mt-1">Takip ettiğiniz bitkiler.</p></div>
                 <button onclick="openAddPlantModal()" class="px-5 py-2.5 bg-brand-600 text-white rounded-xl text-sm font-bold shadow-lg flex items-center gap-2 cursor-pointer"><i class="fas fa-plus"></i> <span class="hidden sm:inline">Bitki Ekle</span></button>
@@ -346,8 +353,8 @@
             </div>
         </div>
 
-        <!-- HISTORY VIEW -->
-        <div id="view-history" class="hidden max-w-7xl mx-auto fade-in pb-24">
+        <!-- SECTION: HISTORY -->
+        <div id="history" class="space-y-6 pb-24 scroll-mt-10">
             <div class="flex justify-between items-center mb-8"><h2 class="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white">Analiz Geçmişi</h2><button onclick="clearHistory()" class="text-sm text-red-500 font-bold border border-red-200 px-4 py-2 rounded-lg">Temizle</button></div>
             <div class="bento-card overflow-hidden shadow-lg overflow-x-auto">
                 <table class="w-full text-left text-sm text-gray-600 dark:text-gray-400 min-w-[600px]">
@@ -358,8 +365,8 @@
             </div>
         </div>
         
-        <!-- OTHER VIEWS (Models, Settings, etc.) -->
-        <div id="view-models" class="hidden max-w-5xl mx-auto fade-in pb-20">
+        <!-- SECTION: MODELS -->
+        <div id="models" class="space-y-6 pb-20 scroll-mt-10">
             <div class="flex justify-between items-end mb-8"><div><h2 class="text-3xl font-extrabold text-gray-900 dark:text-white">Modeller</h2><p class="text-gray-500 text-sm mt-1">Sisteme yüklü yapay zeka modellerinin yönetimi.</p></div><button class="px-5 py-2.5 bg-brand-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-brand-500/30 flex items-center gap-2 cursor-pointer"><i class="fas fa-plus"></i> Yeni Model</button></div>
             <div class="bento-card p-8 flex flex-col md:flex-row gap-8 items-start">
                 <div class="w-24 h-24 rounded-2xl bg-gradient-to-br from-brand-500 to-blue-600 flex items-center justify-center text-white text-4xl shadow-xl shadow-brand-500/20 shrink-0"><i class="fas fa-cube"></i></div>
@@ -371,7 +378,8 @@
             </div>
         </div>
 
-        <div id="view-settings" class="hidden max-w-6xl mx-auto fade-in pb-20">
+        <!-- SECTION: SETTINGS -->
+        <div id="settings" class="space-y-6 pb-20 scroll-mt-10">
              <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white mb-8">Ayarlar</h2>
              <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div class="bento-card p-8">
@@ -386,7 +394,6 @@
                     <button onclick="document.getElementById('avatar-upload').click()" class="text-sm bg-gray-900 text-white px-4 py-2 rounded-lg font-bold hover:bg-gray-800 cursor-pointer">Fotoğrafı Değiştir</button>
                     <input type="file" id="avatar-upload" class="hidden" accept="image/*" onchange="handleAvatarChange(event)">
                 </div>
-                <!-- Account settings form -->
                 <div class="bento-card p-8 col-span-1 lg:col-span-2">
                      <form onsubmit="saveProfileSettings(event)" class="space-y-5">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -401,20 +408,21 @@
              </div>
         </div>
         
-        <div id="view-about" class="hidden max-w-4xl mx-auto fade-in pb-20">
+        <!-- SECTION: TEAM & ABOUT -->
+        <div id="about" class="space-y-12 pb-20 scroll-mt-10">
             <div class="bento-card overflow-hidden">
                 <div class="h-64 bg-gradient-to-r from-brand-600 to-green-400 flex items-center justify-center text-white text-center p-6"><div><i class="fas fa-leaf text-6xl mb-4 drop-shadow-lg"></i><h2 class="text-4xl font-extrabold drop-shadow-md">YZDBTKS</h2><p class="text-lg opacity-90 font-medium">Yapay Zeka Destekli Tarım Teknolojileri</p></div></div>
                 <div class="p-10 prose dark:prose-invert max-w-none text-gray-600 dark:text-gray-300 leading-loose text-lg"><p>YZDBTKS, tarımsal verimliliği artırmak ve bitki hastalıklarını erken evrede tespit etmek amacıyla geliştirilmiş yapay zeka tabanlı bir teşhis sistemidir.</p></div>
             </div>
         </div>
 
-        <div id="view-who-we-are" class="hidden max-w-7xl mx-auto fade-in pb-20">
+        <div id="who-we-are" class="space-y-12 pb-20 scroll-mt-10">
             <div class="text-center mb-12"><h2 class="text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight">Ekibimiz</h2></div>
             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8">
                 <div class="bento-card p-8 text-center hover:-translate-y-2 transition-transform duration-300 group"><div class="relative w-32 h-32 mx-auto mb-6"><div class="absolute inset-0 bg-brand-500 rounded-full blur-xl opacity-0 group-hover:opacity-20 transition-opacity"></div><img src="https://ui-avatars.com/api/?name=Ayberk+Arici&background=10b981&color=fff&size=128" class="w-full h-full rounded-full border-4 border-white dark:border-dark-bg relative z-10 shadow-lg"></div><h3 class="text-xl font-bold text-gray-900 dark:text-white">Ayberk ARICI</h3><p class="text-brand-600 font-bold text-sm mb-4 uppercase tracking-wide">Proje Yöneticisi & Kod</p></div>
                  <div class="bento-card p-8 text-center hover:-translate-y-2 transition-transform duration-300 group"><img src="https://ui-avatars.com/api/?name=Ahmet+Akif+Abus&background=0ea5e9&color=fff&size=128" class="w-32 h-32 rounded-full mx-auto mb-6 border-4 border-white dark:border-dark-bg shadow-lg"><h3 class="text-xl font-bold text-gray-900 dark:text-white">Ahmet Akif ABUŞ</h3><p class="text-blue-600 font-bold text-sm mb-4 uppercase tracking-wide">Backend & Frontend</p></div>
                  <div class="bento-card p-8 text-center hover:-translate-y-2 transition-transform duration-300 group"><img src="https://ui-avatars.com/api/?name=Selim+Erdem&background=8b5cf6&color=fff&size=128" class="w-32 h-32 rounded-full mx-auto mb-6 border-4 border-white dark:border-dark-bg shadow-lg"><h3 class="text-xl font-bold text-gray-900 dark:text-white">Selim ERDEM</h3><p class="text-purple-600 font-bold text-sm mb-4 uppercase tracking-wide">Backend Geliştirici</p></div>
-                 <div class="bento-card p-8 text-center hover:-translate-y-2 transition-transform duration-300 group"><img src="https://ui-avatars.com/api/?name=Ahmet+Ensar&background=f59e0b&color=fff&size=128" class="w-32 h-32 rounded-full mx-auto mb-6 border-4 border-white dark:border-dark-bg shadow-lg"><h3 class="text-xl font-bold text-gray-900 dark:text-white">Ahmet Ensar</h3><p class="text-yellow-600 font-bold text-sm mb-4 uppercase tracking-wide">Backend Geliştirici</p></div>
+                 <div class="bento-card p-8 text-center hover:-translate-y-2 transition-transform duration-300 group"><img src="https://ui-avatars.com/api/?name=Ahmet+Ensar+Almak&background=f59e0b&color=fff&size=128" class="w-32 h-32 rounded-full mx-auto mb-6 border-4 border-white dark:border-dark-bg shadow-lg"><h3 class="text-xl font-bold text-gray-900 dark:text-white">Ahmet Ensar ALMAK</h3><p class="text-yellow-600 font-bold text-sm mb-4 uppercase tracking-wide">Backend Geliştirici</p></div>
             </div>
             <div class="text-center mb-8 mt-12"><h3 class="text-2xl font-bold text-gray-800 dark:text-gray-200">Proje Danışmanları</h3></div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
@@ -500,6 +508,17 @@
     </div>
 
     <script>
+        // GLOBAL LOADER REMOVAL (CRITICAL FIX)
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                const loader = document.getElementById('global-loader');
+                if (loader) {
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.style.display = 'none', 500);
+                }
+            }, 800); // Small delay to ensure styles are applied
+        });
+
         // Core Logic
         function toggleMobileSidebar() { 
             const sb = document.getElementById('mobile-sidebar');
@@ -507,39 +526,56 @@
             if (sb.classList.contains('-translate-x-full')) {
                 sb.classList.remove('-translate-x-full');
                 overlay.classList.remove('hidden');
-                setTimeout(() => overlay.classList.remove('opacity-0'), 10); // Fade in
+                setTimeout(() => overlay.classList.remove('opacity-0'), 10); 
             } else {
                 sb.classList.add('-translate-x-full');
                 overlay.classList.add('opacity-0');
-                setTimeout(() => overlay.classList.add('hidden'), 300); // Fade out
+                setTimeout(() => overlay.classList.add('hidden'), 300); 
             }
         }
         
         function switchTab(tabId) {
-            ['dashboard', 'history', 'models', 'settings', 'about', 'who-we-are', 'my-plants'].forEach(id => {
-                const el = document.getElementById('view-' + id);
-                if(el) el.classList.add('hidden');
-                // Optional: Update nav active states here
-            });
-            const view = document.getElementById('view-' + tabId);
-            if(view) { view.classList.remove('hidden'); view.classList.add('fade-in'); }
+            // Scroll to section for one-page layout
+            const section = document.getElementById(tabId === 'dashboard' ? 'view-dashboard' : tabId);
+            if(section) {
+                 section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                 
+                 // Close mobile sidebar if open
+                 const sb = document.getElementById('mobile-sidebar');
+                 if (!sb.classList.contains('-translate-x-full')) toggleMobileSidebar();
+            }
+        }
+        
+        // Scroll Spy for Single Page Nav Active State
+        function scrollToSection(id) {
+            const el = document.getElementById(id);
+            if(el) el.scrollIntoView({behavior: 'smooth', block: 'start'});
             
-            if(tabId === 'history') updateHistoryTable();
-            if(tabId === 'my-plants') updateMyPlantsGrid();
+            // Map team/about to specific IDs if they differ
+            if(id === 'about') document.getElementById('about').scrollIntoView({behavior:'smooth'});
+            if(id === 'who-we-are') document.getElementById('who-we-are').scrollIntoView({behavior:'smooth'});
             
-            // Close mobile sidebar if open
             const sb = document.getElementById('mobile-sidebar');
-            if (!sb.classList.contains('-translate-x-full')) toggleMobileSidebar();
+            if (sb && !sb.classList.contains('-translate-x-full')) toggleMobileSidebar();
         }
 
         // Auth Logic
         let isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-        let user = { name: "Demo Hesap", avatar: "https://ui-avatars.com/api/?name=Demo&background=059669&color=fff" };
+        let user = JSON.parse(localStorage.getItem('currentUser')) || { name: "Demo Hesap", avatar: "https://ui-avatars.com/api/?name=Demo&background=059669&color=fff" };
         
         function checkAuth() {
             // Update sidebar auth section based on login state
-            const areas = [document.getElementById('sidebar-auth-section')]; // Add mobile auth area if needed
-            // Simplified logic for brevity
+            const area = document.getElementById('sidebar-auth-section');
+            const headerAvatar = document.getElementById('header-avatar');
+            const mobileHeaderAvatar = document.getElementById('mobile-header-avatar');
+            
+            if(isLoggedIn) {
+                area.innerHTML = `<div class="flex items-center gap-3"><img src="${user.avatar}" class="w-10 h-10 rounded-full border-2 border-white dark:border-dark-border object-cover"><div class="flex-1 min-w-0"><p class="text-sm font-bold text-gray-900 dark:text-white truncate">${user.name}</p><p class="text-xs text-green-500 font-medium">● Çevrimiçi</p></div><button onclick="logout()" class="text-gray-400 hover:text-red-500"><i class="fas fa-power-off"></i></button></div>`;
+                if(headerAvatar) headerAvatar.src = user.avatar;
+                if(mobileHeaderAvatar) mobileHeaderAvatar.src = user.avatar;
+            } else {
+                area.innerHTML = `<button onclick="openAuthModal()" class="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-bold shadow-lg shadow-brand-500/30 text-sm">Giriş Yap</button>`;
+            }
         }
         function openAuthModal() { 
             document.getElementById('auth-modal').classList.remove('hidden');
@@ -556,25 +592,31 @@
             
             // Admin Girişi
             if(em==="admin@yzbdtks.com" && pw==="2026_yzdbhtks_buyuyor") { 
-                user.name = "YZDBHTKS"; // Admin adı
-                isLoggedIn=true; 
-                localStorage.setItem('isLoggedIn', 'true');
-                checkAuth(); 
-                closeAuthModal(); 
-                alert("Yönetici girişi başarılı!");
+                loginUser("YZDBHTKS", "admin");
             } 
             // Demo Girişi (YENİ)
             else if (em === "demo@gmail.com" && pw === "1a2b3c4d5e") {
-                user.name = "Demo Kullanıcı"; // Demo adı
-                isLoggedIn = true;
-                localStorage.setItem('isLoggedIn', 'true');
-                checkAuth();
-                closeAuthModal();
-                alert("Demo girişi başarılı!");
+                loginUser("Demo Kullanıcı", "user");
             }
             else { 
                 alert("Hatalı e-posta veya şifre."); 
             } 
+        }
+
+        function loginUser(name, role) {
+            user.name = name;
+            user.avatar = `https://ui-avatars.com/api/?name=${name.replace(' ', '+')}&background=059669&color=fff`;
+            
+            isLoggedIn = true;
+            localStorage.setItem('isLoggedIn', 'true');
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            
+            checkAuth();
+            closeAuthModal();
+            alert("Giriş Başarılı!");
+            
+            // Update settings inputs if they exist
+            if(document.getElementById('settings-name')) document.getElementById('settings-name').value = user.name;
         }
 
         function loginDemo() { 
@@ -585,7 +627,7 @@
             // Giriş işlemini tetikle
             handleLogin({ preventDefault: () => {} });
         }
-        function logout() { isLoggedIn=false; localStorage.setItem('isLoggedIn', 'false'); checkAuth(); }
+        function logout() { isLoggedIn=false; localStorage.setItem('isLoggedIn', 'false'); localStorage.removeItem('currentUser'); checkAuth(); }
         
         // --- Auth Tab Switching ---
         function toggleAuthTab(tab) {
@@ -620,13 +662,7 @@
             const name = document.getElementById('reg-name').value;
             // Simplify for demo: just log in as new user
             if(name) {
-                user.name = name;
-                user.avatar = `https://ui-avatars.com/api/?name=${name.replace(' ', '+')}&background=10b981&color=fff`;
-                isLoggedIn = true;
-                localStorage.setItem('isLoggedIn', 'true');
-                checkAuth();
-                closeAuthModal();
-                alert("Kayıt başarılı! Giriş yapıldı.");
+                loginUser(name, "user");
             }
         }
 
@@ -635,6 +671,7 @@
         function openAddPlantModal() {
             document.getElementById('add-plant-modal').classList.remove('hidden');
             setTimeout(() => document.getElementById('add-plant-modal').classList.add('active'), 10);
+            // Reset fields
             document.getElementById('plant-name').value = '';
             document.getElementById('plant-image-preview-container').classList.add('hidden');
             pendingPlantImage = null;
@@ -657,76 +694,60 @@
         function handleAddPlant(e) {
             e.preventDefault();
             const name = document.getElementById('plant-name').value;
-            if(!pendingPlantImage) { alert("Resim seçiniz"); return; }
+            
+            if (!pendingPlantImage) {
+                alert("Lütfen bir görsel seçin veya fotoğraf çekin.");
+                return;
+            }
+            
             const plants = JSON.parse(localStorage.getItem('myPlants') || '[]');
-            plants.push({ name, image: pendingPlantImage, date: new Date().toLocaleDateString() });
+            plants.push({ name: name, image: pendingPlantImage, date: new Date().toLocaleDateString() });
             localStorage.setItem('myPlants', JSON.stringify(plants));
             updateMyPlantsGrid();
             closeAddPlantModal();
+            alert("Bitki başarıyla eklendi!");
         }
+
         function updateMyPlantsGrid() {
             const plants = JSON.parse(localStorage.getItem('myPlants') || '[]');
             const grid = document.getElementById('my-plants-grid');
             const empty = document.getElementById('my-plants-empty');
+            
             grid.innerHTML = '';
-            if(plants.length === 0) { empty.classList.remove('hidden'); }
-            else {
+            if(plants.length === 0) {
+                empty.classList.remove('hidden');
+            } else {
                 empty.classList.add('hidden');
-                plants.forEach(p => {
+                plants.forEach(plant => {
                     grid.innerHTML += `
-                    <div class="bento-card overflow-hidden group">
-                        <div class="h-40 overflow-hidden relative">
-                            <img src="${p.image}" class="w-full h-full object-cover">
-                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                <button onclick="deletePlant('${p.name}')" class="bg-red-500 text-white p-2 rounded-full"><i class="fas fa-trash"></i></button>
+                        <div class="bento-card overflow-hidden group">
+                            <div class="h-48 overflow-hidden relative">
+                                <img src="${plant.image}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                    <button class="text-white bg-red-500 hover:bg-red-600 p-2 rounded-full shadow-lg" onclick="deletePlant('${plant.name}')" title="Sil"><i class="fas fa-trash-alt"></i></button>
+                                </div>
+                            </div>
+                            <div class="p-5">
+                                <h3 class="font-bold text-lg text-gray-900 dark:text-white">${plant.name}</h3>
+                                <p class="text-xs text-gray-500 mt-1">Eklendi: ${plant.date}</p>
                             </div>
                         </div>
-                        <div class="p-4"><h3 class="font-bold text-gray-900 dark:text-white">${p.name}</h3></div>
-                    </div>`;
+                    `;
                 });
             }
         }
-        function deletePlant(n) {
-            if(confirm('Silinsin mi?')) {
-                let p = JSON.parse(localStorage.getItem('myPlants') || '[]');
-                p = p.filter(x => x.name !== n);
-                localStorage.setItem('myPlants', JSON.stringify(p));
-                updateMyPlantsGrid();
-            }
-        }
-        function downloadPlantPDF() {
-            if(!pendingPlantImage) return;
-            const name = document.getElementById('plant-name').value || "Bitkim";
-            
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            
-            doc.setFontSize(22);
-            doc.setTextColor(22, 163, 74);
-            doc.text("YZDBTKS Bitki Kaydı", 105, 20, null, null, "center");
-            
-            doc.setFontSize(12);
-            doc.setTextColor(0, 0, 0);
-            doc.text(`Tarih: ${new Date().toLocaleDateString('tr-TR')}`, 20, 35);
-            
-            doc.setFontSize(16);
-            doc.text(`Bitki Adı: ${name}`, 20, 50);
-            
-            // Add Image
-            // We need to constrain image size to fit page
-            const imgProps = doc.getImageProperties(pendingPlantImage);
-            const pdfWidth = doc.internal.pageSize.getWidth();
-            const margin = 20;
-            const maxImgWidth = pdfWidth - (margin * 2);
-            const ratio = maxImgWidth / imgProps.width;
-            const imgHeight = imgProps.height * ratio;
-            
-            doc.addImage(pendingPlantImage, 'JPEG', margin, 60, maxImgWidth, imgHeight);
-            
-            doc.save(`Bitki_${name}.pdf`);
+        
+        function deletePlant(nameToDelete) {
+             if(confirm(nameToDelete + " adlı bitkiyi silmek istediğinize emin misiniz?")) {
+                 let plants = JSON.parse(localStorage.getItem('myPlants') || '[]');
+                 plants = plants.filter(plant => plant.name !== nameToDelete);
+                 localStorage.setItem('myPlants', JSON.stringify(plants));
+                 updateMyPlantsGrid();
+             }
         }
 
-        // Analysis Logic (Simplified for brevity)
+        // Analysis Logic
+        let currentResult = null;
         function handleFile(e) {
             const reader = new FileReader();
             reader.onload = (ev) => {
@@ -738,11 +759,11 @@
                     document.getElementById('scanner-overlay').classList.add('hidden');
                     document.getElementById('res-empty').classList.add('hidden');
                     document.getElementById('res-content').classList.remove('hidden');
-                    // Mock result population
-                    document.getElementById('res-title').innerText = "Erken Yanıklık";
-                    document.getElementById('res-score').innerText = "%96";
-                    document.getElementById('res-desc').innerText = "Yaprak yüzeyinde lekeler.";
-                    document.getElementById('res-action').innerText = "Fungisit uygulayın.";
+                    currentResult = { title: "Erken Yanıklık", score: 96, desc: "Yaprak yüzeyinde leke.", action: "Mancozeb uygulayın." };
+                    document.getElementById('res-title').innerText = currentResult.title;
+                    document.getElementById('res-score').innerText = "%" + currentResult.score;
+                    document.getElementById('res-desc').innerText = currentResult.desc;
+                    document.getElementById('res-action').innerText = currentResult.action;
                 }, 2000);
             }
             reader.readAsDataURL(e.target.files[0]);
@@ -753,58 +774,38 @@
             document.getElementById('res-content').classList.add('hidden');
             document.getElementById('res-empty').classList.remove('hidden');
         }
-        
-        // Init
-        checkAuth();
-        // Check theme
-        if(localStorage.getItem('appTheme') === 'cyberpunk') document.documentElement.classList.add('dark');
-        
         function saveResult() {
             if(!currentResult) return;
-            
-            // Generate PDF logic using jsPDF
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            
-            doc.setFontSize(22);
-            doc.setTextColor(22, 163, 74); // Brand Green
-            doc.text("YZDBTKS Analiz Raporu", 105, 20, null, null, "center");
-            
-            doc.setFontSize(12);
-            doc.setTextColor(0, 0, 0);
-            doc.text(`Tarih: ${new Date().toLocaleString('tr-TR')}`, 20, 40);
-            doc.text(`Analiz ID: #TR-${Math.floor(Math.random() * 100000)}`, 20, 50);
-            
-            doc.setLineWidth(0.5);
-            doc.line(20, 55, 190, 55);
-            
-            doc.setFontSize(16);
-            doc.text(`Sonuç: ${currentResult.title}`, 20, 70);
-            
-            doc.setFontSize(14);
-            doc.setTextColor(100, 100, 100);
-            doc.text(`Güven Skoru: %${currentResult.score}`, 20, 80);
-            
-            doc.setFontSize(12);
-            doc.setTextColor(0, 0, 0);
-            doc.text("Bulgular:", 20, 100);
-            const splitDesc = doc.splitTextToSize(currentResult.desc, 170);
-            doc.text(splitDesc, 20, 110);
-            
-            const nextY = 110 + (splitDesc.length * 7) + 10;
-            
-            doc.text("Önerilen Aksiyon:", 20, nextY);
-            const splitAction = doc.splitTextToSize(currentResult.action, 170);
-            doc.text(splitAction, 20, nextY + 10);
-            
-            doc.save(`YZDBTKS_Rapor_${Date.now()}.pdf`);
-
-            // Save to History
-            let hist = JSON.parse(localStorage.getItem('analysisHistory') || '[]');
-            hist.unshift({ id: '#TR-' + Math.floor(Math.random()*10000), date: new Date().toLocaleString('tr-TR'), ...currentResult });
-            localStorage.setItem('analysisHistory', JSON.stringify(hist));
+            doc.text("YZDBTKS Analiz Raporu", 20, 20);
+            doc.text(`Sonuç: ${currentResult.title}`, 20, 30);
+            doc.save("Analiz.pdf");
+            let h = JSON.parse(localStorage.getItem('analysisHistory')||'[]');
+            h.unshift({id: '#'+Math.floor(Math.random()*1000), date: new Date().toLocaleDateString(), ...currentResult});
+            localStorage.setItem('analysisHistory', JSON.stringify(h));
             updateHistoryTable();
+            alert("Kaydedildi.");
         }
+        function updateHistoryTable() {
+            const h = JSON.parse(localStorage.getItem('analysisHistory')||'[]');
+            const tbody = document.getElementById('history-table-body');
+            const empty = document.getElementById('history-empty');
+            if(h.length===0) { empty.classList.remove('hidden'); tbody.innerHTML=''; }
+            else {
+                empty.classList.add('hidden');
+                tbody.innerHTML = h.map(item => `
+                    <tr class="border-b border-gray-100 dark:border-dark-border">
+                        <td class="px-6 py-4 font-mono text-xs">${item.id}</td>
+                        <td class="px-6 py-4">${item.date}</td>
+                        <td class="px-6 py-4 font-bold dark:text-white">${item.title}</td>
+                        <td class="px-6 py-4 text-green-600">%${item.score}</td>
+                        <td class="px-6 py-4"><button class="text-gray-400 hover:text-brand-500"><i class="fas fa-eye"></i></button></td>
+                    </tr>
+                `).join('');
+            }
+        }
+        function clearHistory() { if(confirm('Silinsin mi?')) { localStorage.removeItem('analysisHistory'); updateHistoryTable(); } }
         
         function toggleTheme() {
             const html = document.documentElement;
@@ -813,10 +814,33 @@
             updateThemeUI();
         }
         function updateThemeUI() { const t = document.getElementById('dark-mode-toggle'); if(t) t.checked = document.documentElement.classList.contains('dark'); }
-        function handleAvatarChange(e) { const f = e.target.files[0]; if(f) { const r = new FileReader(); r.onload=function(ev){ user.avatar=ev.target.result; document.getElementById('settings-avatar').src=ev.target.result; checkAuth(); }; r.readAsDataURL(f); } }
-        function saveProfileSettings(e) { e.preventDefault(); const n = document.getElementById('settings-name').value; if(n) { user.name=n; checkAuth(); alert("Kaydedildi."); } }
+        function handleAvatarChange(e) { const f = e.target.files[0]; if(f) { const r = new FileReader(); r.onload=function(ev){ user.avatar=ev.target.result; localStorage.setItem('currentUser', JSON.stringify(user)); checkAuth(); }; r.readAsDataURL(f); } }
+        function saveProfileSettings(e) { e.preventDefault(); const n = document.getElementById('settings-name').value; if(n) { user.name=n; localStorage.setItem('currentUser', JSON.stringify(user)); checkAuth(); alert("Kaydedildi."); } }
         if(localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) { document.documentElement.classList.add('dark'); } else { document.documentElement.classList.remove('dark'); }
         updateThemeUI();
+        function toggleAIChat() { document.getElementById('ai-chat-window').classList.toggle('hidden'); }
+        function downloadPlantPDF() {
+            if(!pendingPlantImage) return;
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.text("Bitki Kaydı", 20, 20);
+            doc.addImage(pendingPlantImage, 'JPEG', 20, 30, 100, 100);
+            doc.save("Bitki.pdf");
+        }
+        function setTheme(t) {
+            document.documentElement.removeAttribute('data-theme');
+            if(t !== 'default') document.documentElement.setAttribute('data-theme', t);
+            localStorage.setItem('appTheme', t);
+            if(t==='cyberpunk'||t==='gamer') document.documentElement.classList.add('dark');
+        }
+        if(localStorage.getItem('appTheme')) setTheme(localStorage.getItem('appTheme'));
+
+        // Chart
+        document.addEventListener("DOMContentLoaded", () => {
+            const ctx = document.getElementById('miniChart').getContext('2d');
+            const grad = ctx.createLinearGradient(0,0,0,200); grad.addColorStop(0, 'rgba(16,185,129,0.2)'); grad.addColorStop(1, 'rgba(16,185,129,0)');
+            new Chart(ctx, { type: 'line', data: { labels: ['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'], datasets: [{ data: [12,19,15,25,22,30,42], borderColor: '#10b981', backgroundColor: grad, borderWidth: 2, tension: 0.4, fill: true, pointRadius: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } } });
+        });
     </script>
 </body>
 </html>
