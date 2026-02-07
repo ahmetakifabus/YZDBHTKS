@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>YZDBTKS v11.2 - Yönetici Paneli</title>
+    <title>YZDBTKS v11.3 - Sponsor ve İletişim</title>
     
     <link rel="icon" href="image_4067b1.png" type="image/png">
 
@@ -141,13 +141,8 @@
         .glass-panel { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.5); }
         .dark .glass-panel { background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); }
         
-        /* Loader */
-        #global-loader { position: fixed; inset: 0; background: #111827; z-index: 99999; display: flex; justify-content: center; align-items: center; flex-direction: column; transition: opacity 0.5s; }
-        .loader-spin { width: 50px; height: 50px; border: 4px solid #374151; border-top-color: #10b981; border-radius: 50%; animation: spin 1s infinite linear; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* Arka Plan */
         .ambient-blob { position: absolute; border-radius: 50%; filter: blur(60px); opacity: 0.4; z-index: 0; animation: blob 10s infinite; pointer-events: none; }
+        @media (max-width: 768px) { .ambient-blob { display: none; } }
         .blob-1 { top: -10%; left: -10%; width: 400px; height: 400px; background-color: var(--color-brand-500); animation-delay: 0s; }
         .blob-2 { bottom: -10%; right: -10%; width: 400px; height: 400px; background-color: #3b82f6; animation-delay: 2s; }
         .blob-3 { top: 40%; left: 40%; width: 300px; height: 300px; background-color: #a855f7; animation-delay: 4s; opacity: 0.2; }
@@ -192,7 +187,7 @@
                 <i class="fas fa-leaf text-lg"></i>
             </div>
             <div>
-                <h1 class="font-extrabold text-xl tracking-tight leading-none">YZDBTKS</h1>
+                <h1 class="font-extrabold text-xl tracking-tight leading-none text-gray-900 dark:text-white">YZDBTKS</h1>
                 <span class="text-[10px] text-brand-600 dark:text-brand-400 font-bold tracking-[0.25em] uppercase hidden sm:block">Enterprise</span>
             </div>
         </div>
@@ -291,7 +286,7 @@
             <button onclick="toggleMobileMenu()" class="text-3xl text-gray-500"><i class="fas fa-times"></i></button>
         </div>
         <div id="mobile-auth-container" class="flex flex-col gap-3 mb-6">
-            <!-- JS populated with Login/Register or Profile -->
+            <!-- JS populated -->
         </div>
         <div class="flex-1 overflow-y-auto space-y-4 text-center">
              <button onclick="scrollToSection('dashboard')" class="text-xl font-bold text-brand-600 block w-full py-2">Panel</button>
@@ -301,6 +296,20 @@
              <button onclick="scrollToSection('settings')" class="text-xl font-medium text-gray-600 dark:text-gray-300 block w-full py-2">Ayarlar</button>
              <button onclick="scrollToSection('about')" class="text-xl font-medium text-gray-600 dark:text-gray-300 block w-full py-2">Hakkında</button>
              <button onclick="scrollToSection('who-we-are')" class="text-xl font-medium text-gray-600 dark:text-gray-300 block w-full py-2">Ekip</button>
+        </div>
+    </div>
+
+    <!-- CHANGE PASSWORD MODAL -->
+    <div id="password-modal" class="modal fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm hidden">
+        <div class="glass-card w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl relative bg-white dark:bg-gray-900">
+            <button onclick="closeModal('password-modal')" class="absolute top-6 right-6 dark:text-white"><i class="fas fa-times text-xl"></i></button>
+            <h2 class="text-xl font-bold text-center mb-6 dark:text-white">Şifre Değiştir</h2>
+            <form onsubmit="handleChangePassword(event)" class="space-y-4">
+                <input type="password" id="old-pw" class="w-full p-4 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white border-none" placeholder="Eski Şifre">
+                <input type="password" id="new-pw" class="w-full p-4 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white border-none" placeholder="Yeni Şifre">
+                <input type="password" id="confirm-pw" class="w-full p-4 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white border-none" placeholder="Yeni Şifre (Tekrar)">
+                <button type="submit" class="w-full py-3 bg-brand-600 text-white rounded-xl font-bold shadow-lg">GÜNCELLE</button>
+            </form>
         </div>
     </div>
 
@@ -440,7 +449,7 @@
                 <div class="bento-card p-8">
                     <h3 class="font-bold text-lg text-gray-900 dark:text-white mb-6 border-b border-gray-100 dark:border-dark-border pb-4">Görünüm</h3>
                     <div class="grid grid-cols-3 gap-3">
-                        <button onclick="setTheme('default')" class="h-12 rounded-xl bg-green-500 shadow-lg shadow-green-500/20 hover:scale-105 transition-transform" title="Doğa"></button><button onclick="setTheme('ocean')" class="h-12 rounded-xl bg-blue-500 shadow-lg shadow-blue-500/20 hover:scale-105 transition-transform" title="Okyanus"></button><button onclick="setTheme('sunset')" class="h-12 rounded-xl bg-orange-500 shadow-lg shadow-orange-500/20 hover:scale-105 transition-transform" title="Gün Batımı"></button><button onclick="setTheme('lavender')" class="h-12 rounded-xl bg-purple-500 shadow-lg shadow-purple-500/20 hover:scale-105 transition-transform" title="Lavanta"></button><button onclick="setTheme('forest')" class="h-12 rounded-xl bg-[#65a30d] shadow-lg hover:scale-105 transition-transform" title="Orman"></button><button onclick="setTheme('fire')" class="h-12 rounded-xl bg-[#ef4444] shadow-lg hover:scale-105 transition-transform" title="Ateş"></button><button onclick="setTheme('royal')" class="h-12 rounded-xl bg-[#d946ef] shadow-lg hover:scale-105 transition-transform" title="Kraliyet"></button><button onclick="setTheme('glacier')" class="h-12 rounded-xl bg-[#06b6d4] shadow-lg hover:scale-105 transition-transform" title="Buzul"></button><button onclick="setTheme('gamer')" class="h-12 rounded-xl bg-[#1b2838] border border-[#66c0f4] flex items-center justify-center text-white hover:scale-105 transition-transform" title="Gamer"><i class="fas fa-gamepad"></i></button><button onclick="setTheme('turkey')" class="h-12 rounded-xl bg-[#E30A17] relative overflow-hidden group hover:scale-105 transition-transform" title="Türkiye"><div class="absolute inset-0 bg-[url('https://upload.wikimedia.org/wikipedia/commons/b/b4/Flag_of_Turkey.svg')] bg-cover bg-center opacity-40"></div></button><button onclick="setTheme('cyberpunk')" class="col-span-2 h-12 rounded-xl bg-black border border-yellow-400 text-yellow-400 font-black text-xs tracking-widest hover:scale-105 transition-transform">CYBERPUNK 2077</button>
+                        <button onclick="setTheme('default')" class="h-12 rounded-xl bg-green-500 shadow-lg shadow-green-500/20 hover:scale-105 transition-transform" title="Doğa"></button><button onclick="setTheme('ocean')" class="h-12 rounded-xl bg-blue-500 shadow-lg shadow-blue-500/20 hover:scale-105 transition-transform" title="Okyanus"></button><button onclick="setTheme('sunset')" class="h-12 rounded-xl bg-orange-500 shadow-lg shadow-orange-500/20 hover:scale-105 transition-transform" title="Gün Batımı"></button><button onclick="setTheme('lavender')" class="h-12 rounded-xl bg-purple-500 shadow-lg shadow-purple-500/20 hover:scale-105 transition-transform" title="Lavanta"></button><button onclick="setTheme('forest')" class="h-12 rounded-xl bg-[#65a30d] shadow-lg shadow-[#65a30d]/20 hover:scale-105 transition-transform" title="Orman"></button><button onclick="setTheme('fire')" class="h-12 rounded-xl bg-[#ef4444] shadow-lg shadow-[#ef4444]/20 hover:scale-105 transition-transform" title="Ateş"></button><button onclick="setTheme('royal')" class="h-12 rounded-xl bg-[#d946ef] shadow-lg shadow-[#d946ef]/20 hover:scale-105 transition-transform" title="Kraliyet"></button><button onclick="setTheme('glacier')" class="h-12 rounded-xl bg-[#06b6d4] shadow-lg shadow-[#06b6d4]/20 hover:scale-105 transition-transform" title="Buzul"></button><button onclick="setTheme('gamer')" class="h-12 rounded-xl bg-[#1b2838] border border-[#66c0f4] flex items-center justify-center text-white hover:scale-105 transition-transform" title="Gamer"><i class="fas fa-gamepad"></i></button><button onclick="setTheme('turkey')" class="h-12 rounded-xl bg-[#E30A17] relative overflow-hidden group hover:scale-105 transition-transform" title="Türkiye"><div class="absolute inset-0 bg-[url('https://upload.wikimedia.org/wikipedia/commons/b/b4/Flag_of_Turkey.svg')] bg-cover bg-center opacity-40"></div></button><button onclick="setTheme('cyberpunk')" class="col-span-2 h-12 rounded-xl bg-black border border-yellow-400 text-yellow-400 font-black text-xs tracking-widest hover:scale-105 transition-transform">CYBERPUNK 2077</button>
                     </div>
                 </div>
                 <div class="bento-card p-8">
@@ -485,6 +494,48 @@
                 <div class="bento-card p-8 text-center border-t-4 border-t-red-500"><img src="https://ui-avatars.com/api/?name=Ahmet+Esat+Kalkan&background=ef4444&color=fff&size=128" class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-white dark:border-dark-bg shadow-lg"><h3 class="text-xl font-bold text-gray-900 dark:text-white">Ahmet Esat KALKAN</h3><p class="text-red-500 font-bold text-sm uppercase tracking-wide">Bilişim Öğretmeni</p></div>
                 <div class="bento-card p-8 text-center border-t-4 border-t-pink-500"><img src="https://ui-avatars.com/api/?name=Semra+Canpolat&background=ec4899&color=fff&size=128" class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-white dark:border-dark-bg shadow-lg"><h3 class="text-xl font-bold text-gray-900 dark:text-white">Semra CANPOLAT</h3><p class="text-pink-500 font-bold text-sm uppercase tracking-wide">Bilişim Öğretmeni</p></div>
             </div>
+
+            <!-- Sponsor ve İletişim Kartları -->
+            <div class="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+                <!-- Sponsorlar -->
+                <div class="bento-card p-6 text-center">
+                    <h3 class="font-bold text-gray-800 dark:text-white mb-4">Sponsorlar</h3>
+                    <div class="flex flex-col items-center gap-4">
+                        <div class="opacity-80 hover:opacity-100 transition-opacity">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/8/82/T%C3%BCbitak_logo.svg" alt="TÜBİTAK" class="h-12 mx-auto grayscale hover:grayscale-0 transition-all mb-2">
+                            <p class="text-[10px] font-bold text-gray-400 uppercase">Proje Desteği</p>
+                        </div>
+                        <div class="p-4 bg-gray-50 dark:bg-white/5 rounded-xl w-full border border-gray-200 dark:border-dark-border">
+                            <h4 class="font-bold text-brand-600 dark:text-brand-400 text-lg">NOKTA GİYİM</h4>
+                            <p class="text-xs text-gray-500 uppercase tracking-widest">Sakarya</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- İletişim -->
+                <div class="bento-card p-6">
+                    <h3 class="font-bold text-gray-800 dark:text-white mb-4 text-center">Sponsorluk & İletişim</h3>
+                    <div class="space-y-3 text-sm">
+                        <a href="mailto:sunaycapa3@gmail.com" class="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-white/5 hover:bg-brand-50 dark:hover:bg-brand-900/10 transition-colors group border border-transparent hover:border-brand-200 dark:hover:border-brand-800">
+                            <div class="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center"><i class="fas fa-envelope"></i></div>
+                            <span class="text-gray-600 dark:text-gray-300 group-hover:text-brand-600 text-xs sm:text-sm break-all">sunaycapa3@gmail.com</span>
+                        </a>
+                        <a href="mailto:a.selimerdem0303@gmail.com" class="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-white/5 hover:bg-brand-50 dark:hover:bg-brand-900/10 transition-colors group border border-transparent hover:border-brand-200 dark:hover:border-brand-800">
+                            <div class="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center"><i class="fas fa-envelope"></i></div>
+                            <span class="text-gray-600 dark:text-gray-300 group-hover:text-brand-600 text-xs sm:text-sm break-all">a.selimerdem0303@gmail.com</span>
+                        </a>
+                        <a href="mailto:ahmetakifabus91@gmail.com" class="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-white/5 hover:bg-brand-50 dark:hover:bg-brand-900/10 transition-colors group border border-transparent hover:border-brand-200 dark:hover:border-brand-800">
+                            <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center"><i class="fas fa-envelope"></i></div>
+                            <span class="text-gray-600 dark:text-gray-300 group-hover:text-brand-600 text-xs sm:text-sm break-all">ahmetakifabus91@gmail.com</span>
+                        </a>
+                        <a href="mailto:yzdbhtks@proton.me" class="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-white/5 hover:bg-brand-50 dark:hover:bg-brand-900/10 transition-colors group border border-transparent hover:border-brand-200 dark:hover:border-brand-800">
+                            <div class="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center"><i class="fas fa-envelope"></i></div>
+                            <span class="text-gray-600 dark:text-gray-300 group-hover:text-brand-600 text-xs sm:text-sm break-all">yzdbhtks@proton.me</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
             <div class="mt-16 flex flex-col items-center justify-center border-t border-gray-200 dark:border-dark-border pt-10 pb-10">
                 <p class="text-xs font-bold text-gray-400 dark:text-gray-500 mb-4 uppercase tracking-[0.2em]">Bu proje TÜBİTAK desteği ile geliştirilmiştir</p>
                 <img src="https://upload.wikimedia.org/wikipedia/commons/8/82/T%C3%BCbitak_logo.svg" alt="TÜBİTAK Logo" class="h-16 w-auto opacity-80 hover:opacity-100 transition-opacity grayscale hover:grayscale-0">
@@ -559,95 +610,6 @@
                 </div>
                 
                 <button type="submit" class="w-full py-3 bg-brand-600 text-white font-bold rounded-xl shadow-lg mt-4">Kaydet</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- NOTIFICATIONS PANEL -->
-    <div id="notification-panel" class="hidden absolute top-20 right-4 lg:right-24 w-80 bg-white dark:bg-dark-panel rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-border z-[60] overflow-hidden fade-in">
-        <div class="p-4 border-b border-gray-100 dark:border-dark-border flex justify-between items-center bg-gray-50 dark:bg-white/5">
-            <h3 class="font-bold text-gray-800 dark:text-white">Bildirimler</h3>
-            <span class="text-xs bg-red-500 text-white px-2 py-0.5 rounded-full">2</span>
-        </div>
-        <div class="max-h-64 overflow-y-auto">
-            <div class="p-4 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer border-b border-gray-50 dark:border-white/5">
-                <div class="flex items-start gap-3">
-                    <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-xs"><i class="fas fa-check"></i></div>
-                    <div>
-                        <p class="text-xs text-gray-400 mb-0.5">10:42</p>
-                        <p class="text-sm font-medium text-gray-800 dark:text-gray-200">Analiz tamamlandı: Domates #42</p>
-                    </div>
-                </div>
-            </div>
-            <div class="p-4 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer">
-                <div class="flex items-start gap-3">
-                    <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xs"><i class="fas fa-info"></i></div>
-                    <div>
-                        <p class="text-xs text-gray-400 mb-0.5">Dün</p>
-                        <p class="text-sm font-medium text-gray-800 dark:text-gray-200">Sistem güncellemesi v10.0 yüklendi.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- PROFILE DROPDOWN MENU -->
-    <div id="profile-dropdown" class="hidden absolute top-20 right-4 w-72 bg-white dark:bg-dark-panel rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-border z-[70] overflow-hidden fade-in">
-         <div class="p-5 border-b border-gray-100 dark:border-dark-border flex items-center gap-4 bg-gray-50 dark:bg-white/5">
-             <img id="dropdown-avatar" src="" class="w-12 h-12 rounded-full border-2 border-brand-500">
-             <div>
-                 <h4 id="dropdown-name" class="font-bold text-gray-900 dark:text-white truncate max-w-[150px]">Kullanıcı Adı</h4>
-                 <p id="dropdown-email" class="text-xs text-gray-500 truncate max-w-[150px]">email@adresi.com</p>
-             </div>
-         </div>
-         <div class="p-2 space-y-1">
-             <div id="verify-section" class="px-4 py-2 flex items-center justify-between">
-                 <span class="text-sm font-medium text-gray-600 dark:text-gray-300">Durum:</span>
-                 <span id="verify-badge" class="text-xs font-bold px-2 py-0.5 rounded-md bg-yellow-100 text-yellow-700">Onaysız</span>
-             </div>
-             <button id="verify-btn" onclick="verifyEmail()" class="w-full text-left px-4 py-2.5 text-sm font-medium text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-900/20 rounded-lg flex items-center gap-2">
-                 <i class="fas fa-envelope-open-text"></i> E-posta Doğrula
-             </button>
-             <button onclick="openChangePasswordModal()" class="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg flex items-center gap-2">
-                 <i class="fas fa-key"></i> Şifreyi Değiştir
-             </button>
-             <div class="border-t border-gray-100 dark:border-dark-border my-1"></div>
-             <button onclick="logout()" class="w-full text-left px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg flex items-center gap-2">
-                 <i class="fas fa-sign-out-alt"></i> Çıkış Yap
-             </button>
-         </div>
-    </div>
-
-    <!-- MOBILE MENU OVERLAY -->
-    <div id="mobile-menu" class="fixed inset-0 bg-white/95 dark:bg-dark-panel/95 backdrop-blur-xl z-[60] flex flex-col p-6 hidden transition-all">
-        <div class="flex justify-between items-center mb-8">
-            <span class="font-bold text-2xl dark:text-white">Menü</span>
-            <button onclick="toggleMobileMenu()" class="text-3xl text-gray-500"><i class="fas fa-times"></i></button>
-        </div>
-        <div id="mobile-auth-container" class="flex flex-col gap-3 mb-6">
-            <!-- JS populated -->
-        </div>
-        <div class="flex-1 overflow-y-auto space-y-4 text-center">
-             <button onclick="scrollToSection('dashboard')" class="text-xl font-bold text-brand-600 block w-full py-2">Panel</button>
-             <button onclick="scrollToSection('my-plants')" class="text-xl font-medium text-gray-600 dark:text-gray-300 block w-full py-2">Bitkilerim</button>
-             <button onclick="scrollToSection('history')" class="text-xl font-medium text-gray-600 dark:text-gray-300 block w-full py-2">Geçmiş</button>
-             <button onclick="scrollToSection('models')" class="text-xl font-medium text-gray-600 dark:text-gray-300 block w-full py-2">Modeller</button>
-             <button onclick="scrollToSection('settings')" class="text-xl font-medium text-gray-600 dark:text-gray-300 block w-full py-2">Ayarlar</button>
-             <button onclick="scrollToSection('about')" class="text-xl font-medium text-gray-600 dark:text-gray-300 block w-full py-2">Hakkında</button>
-             <button onclick="scrollToSection('who-we-are')" class="text-xl font-medium text-gray-600 dark:text-gray-300 block w-full py-2">Ekip</button>
-        </div>
-    </div>
-
-    <!-- CHANGE PASSWORD MODAL -->
-    <div id="password-modal" class="modal fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm hidden">
-        <div class="glass-card w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl relative bg-white dark:bg-gray-900">
-            <button onclick="closeModal('password-modal')" class="absolute top-6 right-6 dark:text-white"><i class="fas fa-times text-xl"></i></button>
-            <h2 class="text-xl font-bold text-center mb-6 dark:text-white">Şifre Değiştir</h2>
-            <form onsubmit="handleChangePassword(event)" class="space-y-4">
-                <input type="password" id="old-pw" class="w-full p-4 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white border-none" placeholder="Eski Şifre">
-                <input type="password" id="new-pw" class="w-full p-4 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white border-none" placeholder="Yeni Şifre">
-                <input type="password" id="confirm-pw" class="w-full p-4 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white border-none" placeholder="Yeni Şifre (Tekrar)">
-                <button type="submit" class="w-full py-3 bg-brand-600 text-white rounded-xl font-bold shadow-lg">GÜNCELLE</button>
             </form>
         </div>
     </div>
@@ -829,6 +791,9 @@
             checkAuth();
             closeAuthModal();
             alert("Giriş Başarılı!");
+            
+            // Update settings inputs if they exist
+            if(document.getElementById('settings-name')) document.getElementById('settings-name').value = user.name;
         }
 
         function loginDemo() { 
@@ -1134,13 +1099,7 @@
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             doc.text("Bitki Kaydı", 20, 20);
-            const imgProps = doc.getImageProperties(pendingPlantImage);
-            const pdfWidth = doc.internal.pageSize.getWidth();
-            const margin = 20;
-            const maxImgWidth = pdfWidth - (margin * 2);
-            const ratio = maxImgWidth / imgProps.width;
-            const imgHeight = imgProps.height * ratio;
-            doc.addImage(pendingPlantImage, 'JPEG', margin, 30, maxImgWidth, imgHeight);
+            doc.addImage(pendingPlantImage, 'JPEG', 20, 30, 100, 100);
             doc.save("Bitki.pdf");
         }
         function setTheme(t) {
@@ -1160,4 +1119,3 @@
     </script>
 </body>
 </html>
-
