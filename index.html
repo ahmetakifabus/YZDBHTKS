@@ -1,415 +1,873 @@
-<!DOCTYPE html>
-<html lang="tr" class="scroll-smooth">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>YZDBTKS v13.3 - Final Fix</title>
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  Leaf, 
+  ShieldCheck, 
+  Users, 
+  Settings, 
+  LogOut, 
+  Upload, 
+  FileText, 
+  Download, 
+  Cpu, 
+  CreditCard,
+  CheckCircle,
+  AlertTriangle,
+  Moon,
+  Sun,
+  Menu,
+  X,
+  Lock,
+  Mail,
+  UserPlus,
+  ArrowRight,
+  Clock,
+  Trash2,
+  Edit,
+  Save,
+  Palette
+} from 'lucide-react';
+
+// --- Mock Data & Constants ---
+
+const TEAM_MEMBERS = [
+  { name: "Ayberk ARICI", role: "Proje Yöneticisi", color: "bg-blue-500" },
+  { name: "Ahmet Akif ABUŞ", role: "Kod Geliştiricisi (Backend/Frontend)", color: "bg-purple-500" },
+  { name: "Selim ERDEM", role: "Backend Geliştirici", color: "bg-indigo-500" },
+  { name: "Ahmet Ensar ALMAK", role: "Frontend, Yapay Zeka Analizci", color: "bg-pink-500" },
+  { name: "Semra CANPOLAT", role: "Bilişim Öğretmeni (Danışman)", color: "bg-emerald-600" },
+  { name: "Ahmet Esat KALKAN", role: "Bilişim Öğretmeni (Danışman)", color: "bg-emerald-600" }
+];
+
+const SUBSCRIPTION_PLANS = [
+  { 
+    id: 'normal', 
+    name: 'Normal Mod', 
+    price: 0, 
+    features: ['Temel YZDBHTKS Analizi', 'PDF Raporlama', 'Reklamlı Arayüz'],
+    modelAccess: ['basic']
+  },
+  { 
+    id: 'bitkiseven', 
+    name: 'Bitkiseven Mod', 
+    price: 100, 
+    features: ['Hızlandırılmış Analiz', 'JSON/CSV Dışa Aktarım', 'Reklamsız', 'Geçmiş Kayıtları'],
+    modelAccess: ['basic', 'fast']
+  },
+  { 
+    id: 'bahcivan', 
+    name: 'Bahçıvan Mod', 
+    price: 250, 
+    features: ['Gemini Pro (Bahçıvan)', 'Detaylı Tedavi Önerileri', '7/24 Destek', 'Tam Erişim'],
+    modelAccess: ['basic', 'fast', 'pro']
+  }
+];
+
+const DISEASE_CLASSES = [
+  { name: "Külleme", severity: "Orta", treatment: "Kükürtlü ilaçlar kullanılmalı ve havalandırma artırılmalı." },
+  { name: "Leke", severity: "Düşük", treatment: "Lekeli yapraklar temizlenmeli, aşırı sulamadan kaçınılmalı." },
+  { name: "Pas", severity: "Yüksek", treatment: "Mantar ilacı uygulanmalı, bitki izole edilmeli." },
+  { name: "Sağlıklı", severity: "Yok", treatment: "Bitkiniz gayet sağlıklı görünüyor. Düzenli bakıma devam edin." }
+];
+
+// Renk Temaları için Sabit Sınıf Tanımları (Crash Önleyici)
+const THEME_STYLES = {
+  emerald: {
+    name: 'Doğa Yeşili',
+    hex: '#10b981',
+    text: 'text-emerald-500',
+    textHover: 'hover:text-emerald-600',
+    bg: 'bg-emerald-600',
+    bgHover: 'hover:bg-emerald-500',
+    bgLight: 'bg-emerald-500/10',
+    border: 'border-emerald-500',
+    ring: 'focus:ring-emerald-500',
+    shadow: 'shadow-emerald-500/30'
+  },
+  blue: {
+    name: 'Okyanus Mavisi',
+    hex: '#3b82f6',
+    text: 'text-blue-500',
+    textHover: 'hover:text-blue-600',
+    bg: 'bg-blue-600',
+    bgHover: 'hover:bg-blue-500',
+    bgLight: 'bg-blue-500/10',
+    border: 'border-blue-500',
+    ring: 'focus:ring-blue-500',
+    shadow: 'shadow-blue-500/30'
+  },
+  violet: {
+    name: 'Lavanta Moru',
+    hex: '#8b5cf6',
+    text: 'text-violet-500',
+    textHover: 'hover:text-violet-600',
+    bg: 'bg-violet-600',
+    bgHover: 'hover:bg-violet-500',
+    bgLight: 'bg-violet-500/10',
+    border: 'border-violet-500',
+    ring: 'focus:ring-violet-500',
+    shadow: 'shadow-violet-500/30'
+  },
+  orange: {
+    name: 'Gün Batımı',
+    hex: '#f97316',
+    text: 'text-orange-500',
+    textHover: 'hover:text-orange-600',
+    bg: 'bg-orange-600',
+    bgHover: 'hover:bg-orange-500',
+    bgLight: 'bg-orange-500/10',
+    border: 'border-orange-500',
+    ring: 'focus:ring-orange-500',
+    shadow: 'shadow-orange-500/30'
+  },
+  rose: {
+    name: 'Gül Kırmızısı',
+    hex: '#f43f5e',
+    text: 'text-rose-500',
+    textHover: 'hover:text-rose-600',
+    bg: 'bg-rose-600',
+    bgHover: 'hover:bg-rose-500',
+    bgLight: 'bg-rose-500/10',
+    border: 'border-rose-500',
+    ring: 'focus:ring-rose-500',
+    shadow: 'shadow-rose-500/30'
+  }
+};
+
+const MOCK_USERS = [
+  { id: 1, name: "Ahmet Yılmaz", email: "ahmet@ornek.com", role: "user", plan: "normal" },
+  { id: 2, name: "Zeynep Demir", email: "zeynep@ornek.com", role: "user", plan: "bitkiseven" },
+  { id: 3, name: "Mehmet Kaya", email: "mehmet@ornek.com", role: "user", plan: "bahcivan" },
+  { id: 4, name: "Demo Kullanıcı", email: "demo@yzdbhtks.com", role: "user", plan: "normal" },
+];
+
+// --- Main Component ---
+
+export default function App() {
+  // State
+  const [user, setUser] = useState(null); // { email, role, plan }
+  const [authStep, setAuthStep] = useState('login'); // login, register, verify
+  const [authMode, setAuthMode] = useState('login'); // 'login' or 'register' tab
+  
+  const [emailInput, setEmailInput] = useState('');
+  const [passInput, setPassInput] = useState('');
+  const [nameInput, setNameInput] = useState(''); 
+  
+  const [verificationCode, setVerificationCode] = useState('');
+  const [enteredCode, setEnteredCode] = useState('');
+  const [generatedCode, setGeneratedCode] = useState(null);
+  
+  // App State
+  const [currentView, setCurrentView] = useState('dashboard');
+  const [darkMode, setDarkMode] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [themeColor, setThemeColor] = useState('emerald'); // Default theme
+  const [analysisHistory, setAnalysisHistory] = useState([]); // Store past analyses
+  
+  // Admin State
+  const [usersList, setUsersList] = useState(MOCK_USERS);
+
+  // Analysis State
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState(null);
+  const [selectedModel, setSelectedModel] = useState('yzdbhtks');
+
+  // Helper to get current theme styles safely
+  const theme = THEME_STYLES[themeColor];
+
+  // --- Auth Functions ---
+
+  const handleAuthSubmit = (e) => {
+    e.preventDefault();
+    if (authMode === 'login') {
+      if (emailInput === 'yzdbhtks@proton.me' && passInput === '2026_yzdbhtks_buyuyor') {
+        completeLogin({ email: emailInput, role: 'admin', plan: 'bahcivan', name: 'Admin' });
+      } else if (emailInput && passInput) {
+        sendVerificationCode();
+      } else {
+        alert("Lütfen e-posta ve şifrenizi girin.");
+      }
+    } else {
+      if (emailInput && passInput && nameInput) {
+        sendVerificationCode();
+      } else {
+        alert("Lütfen tüm alanları doldurun.");
+      }
+    }
+  };
+
+  const sendVerificationCode = () => {
+    const code = '1234'; 
+    setGeneratedCode(code);
+    setAuthStep('verify');
+    setTimeout(() => alert(`SİMÜLASYON: ${emailInput} adresine gönderilen kod: ${code}`), 500);
+  };
+
+  const handleVerify = (e) => {
+    e.preventDefault();
+    if (enteredCode === generatedCode || enteredCode === '000000' || enteredCode === '1234') {
+      completeLogin({ email: emailInput, role: 'user', plan: 'normal', name: nameInput || emailInput.split('@')[0] });
+    } else {
+      alert("Hatalı doğrulama kodu!");
+    }
+  };
+
+  const handleDemoLogin = () => {
+    completeLogin({ email: 'demo@yzdbhtks.com', role: 'user', plan: 'normal', name: 'Demo Kullanıcı' });
+  };
+
+  const completeLogin = (userData) => {
+    setUser(userData);
+    setAuthStep('app');
+    setEmailInput('');
+    setPassInput('');
+    setNameInput('');
+    setEnteredCode('');
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    setAuthStep('login');
+    setAuthMode('login');
+    setAnalysisResult(null);
+    setSelectedImage(null);
+  };
+
+  // --- Analysis Functions ---
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSelectedImage(reader.result);
+        setAnalysisResult(null);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const runAnalysis = () => {
+    if (!selectedImage) return;
+
+    if (selectedModel === 'gemini_pro' && user.plan !== 'bahcivan') {
+      alert("Bu model için 'Bahçıvan' paketine yükseltmelisiniz!");
+      return;
+    }
+
+    setAnalyzing(true);
     
-    <!-- FAVICON -->
-    <link rel="icon" href="logo.png" type="image/png">
+    setTimeout(() => {
+      const randomDisease = DISEASE_CLASSES[Math.floor(Math.random() * DISEASE_CLASSES.length)];
+      const confidence = (Math.random() * (99 - 75) + 75).toFixed(2);
+      
+      let aiResponse = "";
+      if (selectedModel === 'gemini_pro') {
+        aiResponse = `[GEMINI PRO BAHÇIVAN MODU]\nAnaliz: ${randomDisease.name} tespit edildi.\n\nDetaylı Rapor: Bitkinin yaprak dokusunda ${randomDisease.name.toLowerCase()} belirtileri gözlemlendi. Klorofil kaybı %15 seviyesinde. \n\nÖzel Tavsiye: Toprak pH değerini kontrol edin ve 3 gün arayla su püskürtün.`;
+      } else {
+        aiResponse = `[YZDBHTKS v3.0]\nTespit: ${randomDisease.name}\nGüven Oranı: %${confidence}\nDurum: ${randomDisease.treatment}`;
+      }
 
-    <!-- Kütüphaneler -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+      const result = {
+        id: Date.now(),
+        disease: randomDisease.name,
+        confidence: confidence,
+        details: aiResponse,
+        severity: randomDisease.severity,
+        timestamp: new Date().toLocaleString(),
+        image: selectedImage
+      };
 
-    <script>
-        try {
-            tailwind.config = {
-                darkMode: 'class',
-                theme: {
-                    extend: {
-                        colors: {
-                            brand: { 50: '#f0fdf4', 100: '#dcfce7', 500: '#10b981', 600: '#059669', 700: '#047857', 900: '#064e3b' },
-                            dark: { bg: '#111827', panel: '#1f293b', border: '#374151' }
-                        },
-                        fontFamily: { sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
-                        animation: { 'float': 'float 6s ease-in-out infinite' },
-                        keyframes: { float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } } }
-                    }
-                }
-            }
-        } catch (e) { console.warn("Tailwind config error", e); }
-    </script>
+      setAnalysisResult(result);
+      setAnalysisHistory(prev => [result, ...prev]); // Add to history
+      setAnalyzing(false);
+    }, 2500);
+  };
 
-    <style>
-        :root { --color-brand-50: #f0fdf4; --color-brand-100: #dcfce7; --color-brand-500: #10b981; --color-brand-600: #059669; --color-dark-bg: #111827; --color-dark-panel: #1f293b; --color-dark-border: #374151; }
-        [data-theme="cyberpunk"] { --color-brand-50: #1a1a00; --color-brand-100: #333300; --color-brand-500: #fcee0a; --color-brand-600: #d4c806; --color-dark-bg: #000000; --color-dark-panel: #09090b; --color-dark-border: #333333; }
-        [data-theme="ocean"] { --color-brand-50: #f0f9ff; --color-brand-100: #e0f2fe; --color-brand-500: #0ea5e9; --color-brand-600: #0284c7; }
-        [data-theme="sunset"] { --color-brand-50: #fff7ed; --color-brand-100: #ffedd5; --color-brand-500: #f97316; --color-brand-600: #ea580c; }
-        [data-theme="lavender"] { --color-brand-50: #f5f3ff; --color-brand-100: #ede9fe; --color-brand-500: #8b5cf6; --color-brand-600: #7c3aed; }
-        [data-theme="gamer"] { --color-brand-50: #eef2f5; --color-brand-100: #c7d5e0; --color-brand-500: #66c0f4; --color-brand-600: #0070d1; --color-dark-bg: #121212; --color-dark-panel: #1b2838; --color-dark-border: #2a475e; }
-        [data-theme="turkey"] { --color-brand-50: #fff5f5; --color-brand-100: #fed7d7; --color-brand-500: #E30A17; --color-brand-600: #c53030; --color-dark-bg: #1a0505; --color-dark-panel: #2d0a0a; --color-dark-border: #451a1a; }
-        
-        [data-theme="turkey"] body::after { content: ''; position: fixed; bottom: 20px; left: 100px; width: 60px; height: 40px; background-image: url('https://upload.wikimedia.org/wikipedia/commons/b/b4/Flag_of_Turkey.svg'); background-size: contain; background-repeat: no-repeat; opacity: 0.8; z-index: 100; pointer-events: none; }
-        [data-theme="turkey"] .glass-panel { border-top: 3px solid #E30A17; }
-        [data-theme="cyberpunk"] .cyber-border { border: 1px solid #fcee0a; box-shadow: 0 0 10px rgba(252, 238, 10, 0.2); }
-        [data-theme="cyberpunk"] .text-brand-500 { text-shadow: 0 0 8px rgba(252, 238, 10, 0.6); }
+  // --- Export Functions ---
 
-        body { font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; }
-        ::-webkit-scrollbar { width: 4px; height: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
-        .dark ::-webkit-scrollbar-thumb { background: #475569; }
-        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .modal { transition: opacity 0.2s ease, transform 0.2s ease; opacity: 0; pointer-events: none; transform: scale(0.95); }
-        .modal.active { opacity: 1; pointer-events: auto; transform: scale(1); }
-        .radar-spinner { width: 50px; height: 50px; border-radius: 50%; border: 3px solid rgba(var(--color-brand-500), 0.1); border-top-color: var(--color-brand-500); animation: spin 1s infinite linear; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .scan-line { position: absolute; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, var(--color-brand-500), transparent); box-shadow: 0 0 20px var(--color-brand-500); top: 0; left: 0; animation: scanning 2s infinite ease-in-out; z-index: 10; }
-        @keyframes scanning { 0% { top: 0%; opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
-        .bento-card { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.4); border-radius: 1.25rem; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
-        .dark .bento-card { background: rgba(30, 41, 59, 0.6); border-color: rgba(255, 255, 255, 0.05); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2); }
-        .bento-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-glow); border-color: rgba(var(--color-brand-500), 0.3); }
-        .viewfinder { position: relative; }
-        .viewfinder::before, .viewfinder::after, .viewfinder-inner::before, .viewfinder-inner::after { content: ''; position: absolute; width: 30px; height: 30px; border-color: var(--color-brand-500); border-style: solid; transition: all 0.3s; }
-        .viewfinder::before { top: 0; left: 0; border-width: 3px 0 0 3px; border-top-left-radius: 8px; }
-        .viewfinder::after { top: 0; right: 0; border-width: 3px 3px 0 0; border-top-right-radius: 8px; }
-        .viewfinder-inner::before { bottom: 0; left: 0; border-width: 0 0 3px 3px; border-bottom-left-radius: 8px; }
-        .viewfinder-inner::after { bottom: 0; right: 0; border-width: 0 3px 3px 0; border-bottom-right-radius: 8px; }
-        .ambient-blob { position: absolute; border-radius: 50%; filter: blur(60px); opacity: 0.4; z-index: 0; animation: blob 10s infinite; pointer-events: none; }
-        .blob-1 { top: -10%; left: -10%; width: 400px; height: 400px; background-color: var(--color-brand-500); animation-delay: 0s; }
-        .blob-2 { bottom: -10%; right: -10%; width: 400px; height: 400px; background-color: #3b82f6; animation-delay: 2s; }
-        .blob-3 { top: 40%; left: 40%; width: 300px; height: 300px; background-color: #a855f7; animation-delay: 4s; opacity: 0.2; }
-        .header-fixed-white { background-color: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-bottom: 1px solid #e5e7eb; color: #1f2937; }
-        .dark .header-fixed-white { background-color: rgba(30, 41, 59, 0.95); border-bottom: 1px solid #374151; color: #f3f4f6; }
-        .nav-text-dark { color: #374151; }
-        .nav-text-dark:hover { color: #111827; background-color: #f3f4f6; }
-        #global-loader { position: fixed; inset: 0; background: #111827; z-index: 99999; display: flex; justify-content: center; align-items: center; flex-direction: column; transition: opacity 0.5s; }
-        .model-card-active { border: 2px solid var(--color-brand-500) !important; background-color: rgba(var(--color-brand-500), 0.05) !important; }
-        .model-btn-active { background-color: var(--color-brand-500) !important; color: white !important; }
-    </style>
-</head>
-<body class="bg-gray-100 text-gray-800 dark:bg-dark-bg dark:text-gray-200 h-screen overflow-hidden flex flex-col transition-colors duration-300 font-sans selection:bg-brand-500 selection:text-white relative" onclick="closeProfileMenu(event)">
+  const downloadJSON = (data = analysisResult) => {
+    if (!data) return;
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", "analiz_sonucu.json");
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+  };
 
-    <div id="global-loader"><div class="loader-spin"></div><div class="text-white mt-4 font-bold tracking-widest text-sm">SİSTEM YÜKLENİYOR...</div><button onclick="document.getElementById('global-loader').style.display='none'" class="mt-4 text-xs text-gray-500 underline cursor-pointer hover:text-white">Takılırsa Tıkla</button></div>
-    <div class="fixed inset-0 overflow-hidden pointer-events-none"><div class="ambient-blob blob-1"></div><div class="ambient-blob blob-2"></div><div class="ambient-blob blob-3"></div></div>
+  const downloadCSV = (data = analysisResult) => {
+    if (!data) return;
+    const csvContent = "data:text/csv;charset=utf-8," 
+      + "Hastalık,Güven,Şiddet,Tarih,Detay\n"
+      + `${data.disease},${data.confidence},${data.severity},${data.timestamp},"${data.details.replace(/\n/g, ' ')}"`;
+    
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "analiz_sonucu.csv");
+    document.body.appendChild(link);
+    link.click();
+  };
 
-    <nav class="h-20 header-fixed-white sticky top-0 z-50 px-4 md:px-8 flex items-center justify-between shadow-sm shrink-0">
-        <div class="flex items-center gap-3 cursor-pointer" onclick="scrollToSection('dashboard')">
-            <div class="w-10 h-10 rounded-xl overflow-hidden shadow-lg hover:scale-105 transition-transform bg-white">
-                <img src="logo.png" class="w-full h-full object-cover" onerror="this.src='https://cdn-icons-png.flaticon.com/512/188/188333.png'">
+  const downloadPDF = () => {
+    window.print();
+  };
+
+  // --- Admin Functions ---
+  const deleteUser = (userId) => {
+    if(confirm('Bu kullanıcıyı silmek istediğinize emin misiniz?')) {
+      setUsersList(usersList.filter(u => u.id !== userId));
+    }
+  };
+
+  const changeUserPlan = (userId, newPlan) => {
+    setUsersList(usersList.map(u => u.id === userId ? {...u, plan: newPlan} : u));
+  };
+
+  // --- Render Views ---
+
+  if (!user) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center p-4 transition-colors duration-500 ${darkMode ? 'bg-slate-900 text-white' : 'bg-gray-100 text-gray-900'}`}>
+        <div className={`max-w-md w-full rounded-2xl shadow-2xl overflow-hidden ${darkMode ? 'bg-slate-800' : 'bg-white'}`}>
+          <div className="p-8">
+            <div className="text-center mb-6">
+              <div className="flex justify-center mb-4">
+                 <div className={`w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/50`}>
+                   <Leaf size={40} className="text-white" />
+                 </div>
+              </div>
+              <h1 className="text-2xl font-bold mb-1 bg-gradient-to-r from-emerald-400 to-cyan-500 bg-clip-text text-transparent">YZDBHTKS</h1>
+              <p className="text-sm opacity-60">Geleceğin Bitki Sağlığı Sistemi</p>
             </div>
-            <div><h1 class="font-extrabold text-xl tracking-tight leading-none">YZDBTKS</h1><span class="text-[10px] text-brand-600 dark:text-brand-400 font-bold tracking-[0.25em] uppercase hidden sm:block">AI Solutions</span></div>
-        </div>
-        <div class="hidden lg:flex items-center bg-gray-100 dark:bg-white/5 p-1 rounded-2xl border border-gray-200 dark:border-white/5">
-            <button onclick="scrollToSection('dashboard')" class="px-4 py-2 rounded-xl text-sm font-bold text-brand-600 dark:text-brand-400 bg-white dark:bg-white/10 shadow-sm transition-all hover:bg-brand-50 dark:hover:bg-brand-900/20">Panel</button>
-            <button onclick="scrollToSection('my-plants')" class="px-4 py-2 rounded-xl text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-white transition-colors">Bitkilerim</button>
-            <button onclick="scrollToSection('history')" class="px-4 py-2 rounded-xl text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-white transition-colors">Geçmiş</button>
-            <button onclick="scrollToSection('models')" class="px-4 py-2 rounded-xl text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-white transition-colors">Modeller</button>
-            <button id="nav-admin-link" onclick="scrollToSection('admin-panel')" class="hidden px-4 py-2 rounded-xl text-sm font-bold text-red-600 hover:bg-red-50 dark:hover:bg-white/5 transition-colors">Yönetim</button>
-            <button onclick="scrollToSection('settings')" class="px-4 py-2 rounded-xl text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-white transition-colors">Ayarlar</button>
-            <button onclick="scrollToSection('about')" class="px-4 py-2 rounded-xl text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-white transition-colors">Hakkında</button>
-            <button onclick="scrollToSection('who-we-are')" class="px-4 py-2 rounded-xl text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-white transition-colors">Ekip</button>
-        </div>
-        <div class="flex items-center gap-3">
-            <button onclick="toggleTheme()" class="w-10 h-10 rounded-full flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/5"><i class="fas fa-moon dark:hidden"></i><i class="fas fa-sun hidden dark:block text-yellow-500"></i></button>
-            <button onclick="toggleNotifications()" class="relative w-10 h-10 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/5"><i class="fas fa-bell"></i><span class="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-dark-panel"></span></button>
-            <div id="desktop-auth" class="flex items-center"></div>
-            <button onclick="toggleMobileMenu()" class="lg:hidden w-10 h-10 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/5 transition-colors"><i class="fas fa-bars text-xl"></i></button>
-        </div>
-    </nav>
-    
-    <div id="notification-panel" class="hidden absolute top-20 right-4 lg:right-24 w-80 bg-white dark:bg-dark-panel rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-border z-[60] overflow-hidden fade-in">
-        <div class="p-4 border-b border-gray-100 dark:border-dark-border flex justify-between items-center bg-gray-50 dark:bg-white/5"><h3 class="font-bold text-gray-800 dark:text-white">Bildirimler</h3><span class="text-xs bg-red-500 text-white px-2 py-0.5 rounded-full">2</span></div>
-        <div class="max-h-64 overflow-y-auto">
-            <div class="p-4 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer border-b border-gray-50 dark:border-white/5"><div class="flex items-start gap-3"><div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-xs"><i class="fas fa-check"></i></div><div><p class="text-xs text-gray-400 mb-0.5">10:42</p><p class="text-sm font-medium text-gray-800 dark:text-gray-200">Analiz tamamlandı.</p></div></div></div>
-            <div class="p-4 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer"><div class="flex items-start gap-3"><div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xs"><i class="fas fa-info"></i></div><div><p class="text-xs text-gray-400 mb-0.5">Dün</p><p class="text-sm font-medium text-gray-800 dark:text-gray-200">Sistem v13.1 yüklendi.</p></div></div></div>
-        </div>
-    </div>
 
-    <div id="profile-dropdown" class="hidden absolute top-20 right-4 w-72 bg-white dark:bg-dark-panel rounded-2xl shadow-2xl border border-gray-100 dark:border-dark-border z-[70] overflow-hidden fade-in">
-         <div class="p-5 border-b border-gray-100 dark:border-dark-border flex items-center gap-4 bg-gray-50 dark:bg-white/5"><img id="dropdown-avatar" src="" class="w-12 h-12 rounded-full border-2 border-brand-500"><div><h4 id="dropdown-name" class="font-bold text-gray-900 dark:text-white truncate max-w-[150px]"></h4><p id="dropdown-email" class="text-xs text-gray-500 truncate max-w-[150px]"></p></div></div>
-         <div class="p-2 space-y-1"><div id="verify-section" class="px-4 py-2 flex items-center justify-between"><span class="text-sm font-medium text-gray-600 dark:text-gray-300">Durum:</span><span id="verify-badge" class="text-xs font-bold px-2 py-0.5 rounded-md bg-yellow-100 text-yellow-700">Onaysız</span></div><button id="verify-btn" onclick="verifyEmail()" class="w-full text-left px-4 py-2.5 text-sm font-medium text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-900/20 rounded-lg flex items-center gap-2"><i class="fas fa-envelope-open-text"></i> E-posta Doğrula</button><button onclick="openChangePasswordModal()" class="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg flex items-center gap-2"><i class="fas fa-key"></i> Şifreyi Değiştir</button><div class="border-t border-gray-100 dark:border-dark-border my-1"></div><button onclick="logout()" class="w-full text-left px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg flex items-center gap-2"><i class="fas fa-sign-out-alt"></i> Çıkış Yap</button></div>
-    </div>
+            {authStep === 'verify' ? (
+              <form onSubmit={handleVerify} className="space-y-4 animate-in fade-in slide-in-from-right-8 duration-300">
+                <div className="bg-emerald-500/10 p-4 rounded-lg border border-emerald-500/30 mb-4 text-center">
+                  <p className="text-sm text-emerald-400">
+                    <span className="font-bold">{emailInput}</span> adresine bir kod gönderdik.
+                  </p>
+                </div>
+                <input 
+                  type="text" 
+                  placeholder="Doğrulama Kodu: 1234" 
+                  value={enteredCode}
+                  onChange={(e) => setEnteredCode(e.target.value)}
+                  className={`w-full text-center tracking-widest text-2xl p-3 rounded-lg border focus:ring-2 focus:ring-emerald-500 outline-none transition-all ${darkMode ? 'bg-slate-700 border-slate-600' : 'bg-gray-50 border-gray-200'}`}
+                  autoFocus
+                />
+                <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white p-3 rounded-lg font-semibold transition-all shadow-lg">
+                  Doğrula ve Devam Et
+                </button>
+                <button type="button" onClick={() => setAuthStep('login')} className="w-full text-sm text-gray-400 hover:text-white">Geri Dön</button>
+              </form>
+            ) : (
+              <div className="space-y-6">
+                <div className={`grid grid-cols-2 p-1 rounded-lg ${darkMode ? 'bg-slate-700' : 'bg-gray-100'}`}>
+                  <button onClick={() => setAuthMode('login')} className={`p-2 text-sm font-medium rounded-md transition-all ${authMode === 'login' ? 'bg-emerald-600 text-white shadow' : 'text-gray-500 hover:text-gray-300'}`}>Giriş Yap</button>
+                  <button onClick={() => setAuthMode('register')} className={`p-2 text-sm font-medium rounded-md transition-all ${authMode === 'register' ? 'bg-emerald-600 text-white shadow' : 'text-gray-500 hover:text-gray-300'}`}>Kayıt Ol</button>
+                </div>
 
-    <div id="mobile-menu" class="fixed inset-0 bg-white/95 dark:bg-dark-panel/95 backdrop-blur-xl z-[60] flex flex-col p-6 hidden transition-all">
-        <div class="flex justify-between items-center mb-8"><span class="font-bold text-2xl dark:text-white">Menü</span><button onclick="toggleMobileMenu()" class="text-3xl text-gray-500"><i class="fas fa-times"></i></button></div>
-        <div id="mobile-auth-container" class="flex flex-col gap-3 mb-6"></div>
-        <div class="flex-1 overflow-y-auto space-y-4 text-center">
-             <button onclick="scrollToSection('dashboard')" class="text-xl font-bold text-brand-600 block w-full py-2">Panel</button>
-             <button onclick="scrollToSection('my-plants')" class="text-xl font-medium text-gray-600 dark:text-gray-300 block w-full py-2">Bitkilerim</button>
-             <button onclick="scrollToSection('history')" class="text-xl font-medium text-gray-600 dark:text-gray-300 block w-full py-2">Geçmiş</button>
-             <button onclick="scrollToSection('models')" class="text-xl font-medium text-gray-600 dark:text-gray-300 block w-full py-2">Modeller</button>
-             <button id="mobile-admin-link" onclick="scrollToSection('admin-panel')" class="text-xl font-bold text-red-600 block w-full py-2 hidden">Yönetim Paneli</button>
-             <button onclick="scrollToSection('settings')" class="text-xl font-medium text-gray-600 dark:text-gray-300 block w-full py-2">Ayarlar</button>
-             <button onclick="scrollToSection('about')" class="text-xl font-medium text-gray-600 dark:text-gray-300 block w-full py-2">Hakkında</button>
-             <button onclick="scrollToSection('who-we-are')" class="text-xl font-medium text-gray-600 dark:text-gray-300 block w-full py-2">Ekip</button>
+                <form onSubmit={handleAuthSubmit} className="space-y-4">
+                  {authMode === 'register' && (
+                    <div className="relative animate-in fade-in duration-200">
+                      <Users className="absolute left-3 top-3 text-gray-400" size={18} />
+                      <input type="text" placeholder="Ad Soyad" value={nameInput} onChange={(e) => setNameInput(e.target.value)} className={`w-full pl-10 p-3 rounded-lg border focus:ring-2 focus:ring-emerald-500 outline-none transition-all ${darkMode ? 'bg-slate-700 border-slate-600' : 'bg-gray-50 border-gray-200'}`} required />
+                    </div>
+                  )}
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 text-gray-400" size={18} />
+                    <input type="email" placeholder="E-posta" value={emailInput} onChange={(e) => setEmailInput(e.target.value)} className={`w-full pl-10 p-3 rounded-lg border focus:ring-2 focus:ring-emerald-500 outline-none transition-all ${darkMode ? 'bg-slate-700 border-slate-600' : 'bg-gray-50 border-gray-200'}`} required />
+                  </div>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 text-gray-400" size={18} />
+                    <input type="password" placeholder="Şifre" value={passInput} onChange={(e) => setPassInput(e.target.value)} className={`w-full pl-10 p-3 rounded-lg border focus:ring-2 focus:ring-emerald-500 outline-none transition-all ${darkMode ? 'bg-slate-700 border-slate-600' : 'bg-gray-50 border-gray-200'}`} required />
+                  </div>
+                  <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white p-3 rounded-lg font-semibold transition-all shadow-lg hover:shadow-emerald-500/30 flex items-center justify-center gap-2">
+                    {authMode === 'login' ? 'Giriş Yap' : 'Kayıt Ol ve Doğrula'} <ArrowRight size={18} />
+                  </button>
+                </form>
+                <div className="relative flex items-center py-2">
+                  <div className="flex-grow border-t border-gray-600"></div>
+                  <span className="flex-shrink-0 mx-4 text-gray-500 text-xs">veya</span>
+                  <div className="flex-grow border-t border-gray-600"></div>
+                </div>
+                <button onClick={handleDemoLogin} className={`w-full border p-3 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${darkMode ? 'border-gray-600 hover:bg-slate-700 text-gray-300' : 'border-gray-300 hover:bg-gray-50 text-gray-700'}`}>
+                  <Cpu size={18} /> Demo Olarak İncele
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-        <button onclick="openAuthModal('login')" class="w-full py-4 bg-brand-600 text-white rounded-2xl font-bold text-lg shadow-lg mb-4">Giriş Yap</button>
-        <button onclick="openAuthModal('register')" class="w-full py-4 bg-white border-2 border-brand-600 text-brand-600 rounded-2xl font-bold text-lg shadow-lg">Kayıt Ol</button>
-    </div>
+      </div>
+    );
+  }
 
-    <main class="flex-1 h-full overflow-y-auto p-4 md:p-8 lg:p-12 relative scroll-smooth z-10 w-full" id="main-scroll-area">
-        <header class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4 fade-in">
-            <div><h2 class="text-2xl md:text-3xl font-black text-gray-900 dark:text-white tracking-tight">Hoşgeldiniz 👋</h2><p class="text-sm text-gray-500 dark:text-gray-400 font-medium mt-1">YZDBTKS Kontrol Paneli ve Analiz Merkezi</p></div>
-            <div class="flex items-center gap-3 bg-white dark:bg-white/5 p-1.5 rounded-2xl border border-gray-200 dark:border-white/10 shadow-sm"><span class="px-3 py-1 rounded-xl bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Sistem Aktif</span><div class="h-4 w-px bg-gray-200 dark:bg-white/10"></div><span class="text-xs font-medium text-gray-500 dark:text-gray-400 px-2" id="current-date">--</span></div>
+  // --- Main App Interface ---
+
+  return (
+    <div className={`min-h-screen flex ${darkMode ? 'bg-slate-900 text-white' : 'bg-gray-50 text-slate-900'} font-sans transition-colors duration-300`}>
+      
+      {/* Sidebar */}
+      <div className={`${sidebarOpen ? 'w-64' : 'w-20'} transition-all duration-300 flex-shrink-0 ${darkMode ? 'bg-slate-800 border-r border-slate-700' : 'bg-white border-r border-gray-200'} flex flex-col relative z-20`}>
+        <div className="p-4 flex items-center justify-between">
+          {sidebarOpen && <span className={`font-bold text-xl tracking-tighter ${theme.text}`}>YZDBHTKS</span>}
+          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700">
+            {sidebarOpen ? <X size={20}/> : <Menu size={20}/>}
+          </button>
+        </div>
+
+        <nav className="flex-1 p-4 space-y-2">
+          {[
+            { id: 'dashboard', icon: Cpu, label: 'Panel' },
+            { id: 'analysis', icon: ShieldCheck, label: 'Analiz Et' },
+            { id: 'history', icon: Clock, label: 'Geçmiş' },
+            { id: 'plans', icon: CreditCard, label: 'Planlar' },
+            { id: 'team', icon: Users, label: 'Ekibimiz' },
+            { id: 'settings', icon: Settings, label: 'Ayarlar' },
+          ].map((item) => (
+            <button 
+              key={item.id}
+              onClick={() => setCurrentView(item.id)}
+              className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${currentView === item.id ? `${theme.bg} text-white shadow-lg ${theme.shadow}` : 'hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-500 dark:text-gray-400'}`}
+            >
+              <item.icon size={22} />
+              {sidebarOpen && <span>{item.label}</span>}
+            </button>
+          ))}
+        </nav>
+
+        <div className="p-4 border-t border-gray-200 dark:border-slate-700">
+          <div className="flex items-center gap-3 mb-4">
+             <div className={`w-10 h-10 rounded-full bg-gradient-to-br from-gray-500 to-gray-700 flex items-center justify-center text-white font-bold`}>
+                {user.role === 'admin' ? 'A' : (user.name ? user.name[0] : 'U')}
+             </div>
+             {sidebarOpen && (
+               <div className="overflow-hidden">
+                 <p className="text-sm font-semibold truncate">{user.name || user.email}</p>
+                 <p className={`text-xs uppercase ${theme.text}`}>{user.plan}</p>
+               </div>
+             )}
+          </div>
+          <button onClick={handleLogout} className="w-full flex items-center gap-2 p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all">
+            <LogOut size={20} />
+            {sidebarOpen && <span>Çıkış Yap</span>}
+          </button>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 flex flex-col h-screen overflow-hidden">
+        
+        {/* Header */}
+        <header className={`h-16 flex items-center justify-between px-6 border-b ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-white/50 border-gray-200'} backdrop-blur-md z-10`}>
+          <h2 className="text-lg font-semibold capitalize">{currentView === 'history' ? 'Geçmiş Analizler' : (currentView === 'settings' ? 'Ayarlar' : currentView)}</h2>
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => setDarkMode(!darkMode)}
+              className={`p-2 rounded-full ${darkMode ? 'bg-slate-700 text-yellow-400' : 'bg-gray-200 text-slate-700'}`}
+            >
+              {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+          </div>
         </header>
 
-        <section id="dashboard" class="scroll-mt-24 fade-in">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div class="bento-card p-6 flex flex-col gap-4 group"><div class="flex justify-between items-center"><div class="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-xl flex items-center justify-center text-xl"><i class="fas fa-camera"></i></div><span class="text-xs font-bold text-green-600 bg-green-50 dark:bg-green-900/20 px-2.5 py-1 rounded-lg">+12%</span></div><div><h3 class="text-3xl font-black text-gray-900 dark:text-white">128</h3><p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Günlük Analiz</p></div></div>
-                <div class="bento-card p-6 flex flex-col gap-4 group"><div class="flex justify-between items-center"><div class="w-12 h-12 bg-green-50 dark:bg-green-900/20 text-green-600 rounded-xl flex items-center justify-center text-xl"><i class="fas fa-leaf"></i></div><span class="text-xs font-bold text-green-600 bg-green-50 dark:bg-green-900/20 px-2.5 py-1 rounded-lg">+5%</span></div><div><h3 class="text-3xl font-black text-gray-900 dark:text-white">%98.4</h3><p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Doğruluk</p></div></div>
-                <div class="bento-card p-6 flex flex-col gap-4 group"><div class="flex justify-between items-center"><div class="w-12 h-12 bg-red-50 dark:bg-red-900/20 text-red-600 rounded-xl flex items-center justify-center text-xl"><i class="fas fa-virus"></i></div><span class="text-xs font-bold text-red-500 bg-red-50 dark:bg-red-900/20 px-2.5 py-1 rounded-lg">-2%</span></div><div><h3 class="text-3xl font-black text-gray-900 dark:text-white">42</h3><p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Tespit</p></div></div>
-                <div class="bento-card p-6 flex flex-col gap-4 group"><div class="flex justify-between items-center"><div class="w-12 h-12 bg-purple-50 dark:bg-purple-900/20 text-purple-600 rounded-xl flex items-center justify-center text-xl"><i class="fas fa-layer-group"></i></div><span class="text-xs font-bold text-gray-500 bg-gray-100 dark:bg-white/10 px-2.5 py-1 rounded-lg">Aktif</span></div><div><h3 class="text-3xl font-black text-gray-900 dark:text-white">v2.1</h3><p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Sistem</p></div></div>
+        {/* Main View Area */}
+        <main className="flex-1 overflow-y-auto p-6 scrollbar-hide">
+          
+          {/* DASHBOARD VIEW */}
+          {currentView === 'dashboard' && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className={`p-6 rounded-2xl ${darkMode ? 'bg-gradient-to-br from-slate-800 to-slate-900' : 'bg-white'} shadow-xl border border-slate-700/50`}>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-sm text-gray-400">Sistem Durumu</p>
+                      <h3 className={`text-2xl font-bold mt-1 ${theme.text}`}>Aktif</h3>
+                    </div>
+                    <Cpu className={theme.text} />
+                  </div>
+                  <div className="mt-4 text-xs text-gray-500">Sunucular: YZDBHTKS_Server_01</div>
+                </div>
+                
+                <div className={`p-6 rounded-2xl ${darkMode ? 'bg-gradient-to-br from-slate-800 to-slate-900' : 'bg-white'} shadow-xl border border-slate-700/50`}>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-sm text-gray-400">Mevcut Plan</p>
+                      <h3 className="text-2xl font-bold text-blue-400 mt-1 uppercase">{user.plan}</h3>
+                    </div>
+                    <CreditCard className="text-blue-500" />
+                  </div>
+                  <div className="mt-4 text-xs text-gray-500">Yükseltmek için planlar sekmesine gidin</div>
+                </div>
+
+                <div className={`p-6 rounded-2xl ${darkMode ? 'bg-gradient-to-br from-slate-800 to-slate-900' : 'bg-white'} shadow-xl border border-slate-700/50`}>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-sm text-gray-400">Toplam Analiz</p>
+                      <h3 className="text-2xl font-bold text-purple-400 mt-1">{analysisHistory.length}</h3>
+                    </div>
+                    <FileText className="text-purple-500" />
+                  </div>
+                  <div className="mt-4 text-xs text-gray-500">Bu oturumda kaydedilen veriler</div>
+                </div>
+              </div>
+
+              <div className={`p-8 rounded-2xl ${darkMode ? 'bg-slate-800' : 'bg-white'} border border-slate-700/50 text-center`}>
+                <Leaf size={64} className={`mx-auto mb-4 animate-bounce ${theme.text}`} />
+                <h2 className="text-2xl font-bold mb-2">Geleceğin Sistemine Hoşgeldiniz</h2>
+                <p className="text-gray-400 max-w-lg mx-auto mb-6">
+                  Bitkilerinizin sağlığını yapay zeka ile koruyun. YZDBHTKS v3.0 modülü ile hastalıkları tespit edin.
+                </p>
+                <button onClick={() => setCurrentView('analysis')} className={`${theme.bg} ${theme.bgHover} text-white px-8 py-3 rounded-full font-semibold shadow-lg transition-all transform hover:scale-105`}>
+                  Analize Başla
+                </button>
+              </div>
             </div>
-            <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
-                <div class="xl:col-span-2 bento-card p-2 shadow-xl flex flex-col h-auto min-h-[500px] lg:h-[650px] overflow-hidden border-2 border-transparent hover:border-brand-500/20 transition-colors">
-                    <div class="px-6 py-5 border-b border-gray-100 dark:border-dark-border flex justify-between items-center bg-gray-50/50 dark:bg-white/5 backdrop-blur-md">
-                        <div class="flex items-center gap-3"><span class="relative flex h-2.5 w-2.5"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-brand-500"></span></span><h2 class="font-bold text-gray-800 dark:text-white text-xs md:text-sm tracking-wide uppercase">Görüntü İşleme</h2>
-                        <select id="ai-model-select" onchange="setActiveModel(this.value)" class="ml-2 bg-gray-100 dark:bg-white/10 text-xs font-bold rounded-lg border-none focus:ring-0 cursor-pointer p-1"><option value="local">YZDBHTS (Yerel)</option><option value="gemini">Gemini Pro (Bulut)</option></select>
+          )}
+
+          {/* ANALYSIS VIEW */}
+          {currentView === 'analysis' && (
+            <div className="max-w-4xl mx-auto space-y-6">
+              
+              <div className={`p-6 rounded-2xl ${darkMode ? 'bg-slate-800' : 'bg-white'} shadow-xl`}>
+                <h3 className={`text-xl font-semibold mb-4 flex items-center gap-2`}>
+                  <Upload size={20} className={theme.text}/> Görüntü Yükle
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <div 
+                      className={`border-2 border-dashed rounded-xl h-64 flex flex-col items-center justify-center cursor-pointer transition-all ${selectedImage ? `${theme.border} ${theme.bgLight}` : 'border-gray-500 hover:border-gray-400'}`}
+                      onClick={() => document.getElementById('fileUpload').click()}
+                    >
+                      {selectedImage ? (
+                        <img src={selectedImage} alt="Preview" className="h-full w-full object-contain rounded-lg" />
+                      ) : (
+                        <>
+                          <Upload size={48} className="text-gray-400 mb-2" />
+                          <p className="text-gray-400">Resim seçmek için tıklayın</p>
+                        </>
+                      )}
+                      <input id="fileUpload" type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm text-gray-400">Model Seçimi</label>
+                      <select 
+                        value={selectedModel} 
+                        onChange={(e) => setSelectedModel(e.target.value)}
+                        className={`w-full p-3 rounded-lg ${darkMode ? 'bg-slate-700 text-white' : 'bg-gray-100 text-gray-900'} border-none outline-none focus:ring-2 ${theme.ring}`}
+                      >
+                        <option value="yzdbhtks">YZDBHTKS v3.0 (Standart - .h5)</option>
+                        <option value="gemini_pro">Gemini Pro (Bahçıvan Modu - Premium)</option>
+                      </select>
+                    </div>
+
+                    <button 
+                      onClick={runAnalysis}
+                      disabled={!selectedImage || analyzing}
+                      className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all ${analyzing ? 'bg-gray-600 cursor-not-allowed' : `${theme.bg} ${theme.bgHover} text-white shadow-lg`}`}
+                    >
+                      {analyzing ? (
+                        <>
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                          Analiz Yapılıyor...
+                        </>
+                      ) : (
+                        <>
+                          <Cpu /> Analizi Başlat
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Results Section */}
+                  <div className={`rounded-xl p-6 ${darkMode ? 'bg-slate-900' : 'bg-gray-50'} border border-slate-700/50 flex flex-col`}>
+                    <h4 className="text-lg font-semibold mb-4 border-b border-gray-700 pb-2">Analiz Sonucu</h4>
+                    
+                    {analysisResult ? (
+                      <div className="space-y-4 flex-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-400">Tespit:</span>
+                          <span className={`px-3 py-1 rounded-full text-sm font-bold ${
+                            analysisResult.disease === 'Sağlıklı' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                          }`}>
+                            {analysisResult.disease}
+                          </span>
                         </div>
-                        <button onclick="resetAnalysis()" class="text-xs font-bold text-gray-500 hover:text-brand-600 dark:hover:text-white transition-colors flex items-center gap-2 bg-gray-100 dark:bg-white/10 px-3 py-1.5 rounded-lg hover:shadow-md cursor-pointer"><i class="fas fa-redo"></i> <span class="hidden sm:inline">TEMİZLE</span></button>
-                    </div>
-                    <div class="flex-1 relative bg-gray-900 flex items-center justify-center group overflow-hidden rounded-b-xl min-h-[400px]">
-                        <div class="viewfinder absolute inset-6 md:inset-12 opacity-30 pointer-events-none"><div class="viewfinder-inner w-full h-full"></div></div>
-                        <div id="drop-zone" class="text-center z-10 p-6 transition-all duration-500 w-full"><div class="w-20 h-20 md:w-32 md:h-32 bg-white/5 rounded-[2rem] flex items-center justify-center mx-auto mb-6 backdrop-blur-md border border-white/10 shadow-2xl animate-float"><i class="fas fa-dna text-4xl md:text-6xl text-brand-400"></i></div><h3 class="text-white text-2xl md:text-4xl font-black mb-3">Görüntü Yükle</h3><div class="flex flex-col sm:flex-row gap-4 justify-center w-full px-4"><button onclick="document.getElementById('file-input').click()" class="bg-brand-600 hover:bg-brand-500 text-white px-8 py-4 rounded-2xl font-bold text-sm shadow-lg hover:shadow-brand-500/40 hover:-translate-y-1 flex items-center justify-center gap-3 w-full sm:w-auto cursor-pointer"><i class="fas fa-folder-open text-lg"></i> Dosya Seç</button><button onclick="document.getElementById('camera-input').click()" class="bg-white/10 hover:bg-white/20 text-white px-8 py-4 rounded-2xl font-bold text-sm transition-all backdrop-blur-md border border-white/10 hover:border-white/30 hover:-translate-y-1 hover:shadow-lg flex items-center justify-center gap-3 w-full sm:w-auto cursor-pointer"><i class="fas fa-camera text-lg"></i> Kamera</button></div><input type="file" id="file-input" class="hidden" accept="image/*" onchange="handleFile(event)"><input type="file" id="camera-input" class="hidden" accept="image/*" capture="environment" onchange="handleFile(event)"></div>
-                        <img id="preview-img" class="hidden w-full h-full object-contain z-10" src=""><div id="scanner-overlay" class="hidden absolute inset-0 bg-black/80 z-20 backdrop-blur-sm flex flex-col items-center justify-center"><div class="scan-line"></div><div class="radar-spinner mb-8"></div><div class="text-center"><h4 class="text-brand-400 font-black text-3xl mb-2 tracking-[0.2em] animate-pulse">ANALİZ EDİLİYOR</h4></div></div>
-                    </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-400">Güven Oranı:</span>
+                          <span className={`font-mono ${theme.text}`}>%{analysisResult.confidence}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-400">Şiddet:</span>
+                          <span className="text-orange-400">{analysisResult.severity}</span>
+                        </div>
+
+                        <div className={`p-4 rounded-lg mt-4 text-sm ${darkMode ? 'bg-slate-800' : 'bg-white'} border border-slate-700`}>
+                          <p className="whitespace-pre-wrap">{analysisResult.details}</p>
+                        </div>
+
+                        <div className="mt-auto pt-6 grid grid-cols-3 gap-2">
+                          <button onClick={downloadPDF} className="flex flex-col items-center justify-center p-2 rounded hover:bg-slate-700 text-xs gap-1">
+                            <FileText size={16} className="text-red-400"/> PDF
+                          </button>
+                          <button onClick={() => downloadJSON(analysisResult)} disabled={user.plan === 'normal'} className={`flex flex-col items-center justify-center p-2 rounded hover:bg-slate-700 text-xs gap-1 ${user.plan === 'normal' ? 'opacity-30 cursor-not-allowed' : ''}`}>
+                            <Download size={16} className="text-yellow-400"/> JSON
+                          </button>
+                          <button onClick={() => downloadCSV(analysisResult)} disabled={user.plan === 'normal'} className={`flex flex-col items-center justify-center p-2 rounded hover:bg-slate-700 text-xs gap-1 ${user.plan === 'normal' ? 'opacity-30 cursor-not-allowed' : ''}`}>
+                            <Download size={16} className="text-green-400"/> CSV
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex-1 flex flex-col items-center justify-center text-gray-500 opacity-50">
+                        <ShieldCheck size={48} className="mb-2"/>
+                        <p>Henüz analiz yapılmadı</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div class="xl:col-span-1 flex flex-col gap-6 h-[650px]">
-                    <div class="bento-card flex-1 flex flex-col overflow-hidden relative shadow-lg border-t-4 border-t-brand-500 min-h-[400px]">
-                        <div class="p-5 border-b border-gray-100 dark:border-dark-border flex justify-between items-center bg-gray-50/50 dark:bg-white/5"><h3 class="font-extrabold text-lg text-gray-800 dark:text-white">Rapor</h3></div>
-                        <div id="res-empty" class="absolute inset-0 top-16 flex flex-col items-center justify-center bg-white/95 dark:bg-dark-panel z-10"><div class="w-20 h-20 bg-gray-100 dark:bg-white/5 rounded-3xl flex items-center justify-center mb-4 text-gray-300 dark:text-gray-600"><i class="fas fa-file-medical-alt text-3xl"></i></div><p class="text-sm font-extrabold text-gray-400 uppercase tracking-widest">Veri Bekleniyor</p></div>
-                        <div id="res-content" class="hidden flex-1 flex flex-col p-6 overflow-y-auto custom-scrollbar"><div class="flex items-start gap-4 mb-6"><div id="res-icon-bg" class="w-14 h-14 rounded-2xl flex shrink-0 items-center justify-center bg-gray-100 text-2xl shadow-md"><i id="res-icon" class="fas fa-question"></i></div><div><span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Durum</span><h2 id="res-title" class="text-lg font-black text-gray-900 dark:text-white leading-tight mt-1">--</h2></div></div><div class="space-y-4"><div class="relative pl-4 border-l-2 border-gray-200 dark:border-dark-border"><h4 class="text-xs font-bold text-gray-900 dark:text-white mb-1 uppercase">Bulgular</h4><p id="res-desc" class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">--</p></div><div class="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-2xl border border-blue-100 dark:border-blue-900/20"><h4 class="text-xs font-bold text-blue-900 dark:text-blue-100 mb-2 uppercase"><i class="fas fa-notes-medical mr-1"></i> Tedavi</h4><p id="res-action" class="text-sm text-blue-800 dark:text-blue-200 leading-relaxed">--</p></div></div><button onclick="saveResult()" class="mt-8 w-full py-3.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-2xl font-bold text-sm shadow-xl flex items-center justify-center gap-2"><i class="fas fa-save"></i> Kaydet ve İndir</button></div>
+              </div>
+            </div>
+          )}
+          
+          {/* HISTORY VIEW (NEW) */}
+          {currentView === 'history' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                 <h3 className="text-2xl font-bold">Geçmiş Analizler</h3>
+                 <span className="text-sm text-gray-400">Toplam: {analysisHistory.length}</span>
+              </div>
+
+              {analysisHistory.length === 0 ? (
+                <div className={`p-12 text-center rounded-2xl ${darkMode ? 'bg-slate-800' : 'bg-white'}`}>
+                  <Clock size={48} className="mx-auto text-gray-600 mb-4"/>
+                  <p className="text-gray-400">Henüz kaydedilmiş bir analiz yok.</p>
+                </div>
+              ) : (
+                <div className="grid gap-4">
+                  {analysisHistory.map((item) => (
+                    <div key={item.id} className={`p-4 rounded-xl flex items-center gap-4 ${darkMode ? 'bg-slate-800' : 'bg-white'} shadow border border-transparent hover:border-gray-600 transition-all`}>
+                      <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-700 flex-shrink-0">
+                        <img src={item.image} alt="Thumb" className="w-full h-full object-cover" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-bold text-lg">{item.disease}</h4>
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-gray-700 text-gray-300">{item.timestamp}</span>
+                        </div>
+                        <p className="text-sm text-gray-400 truncate max-w-md">{item.details.substring(0, 60)}...</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => downloadJSON(item)} className="p-2 hover:bg-slate-700 rounded-lg text-yellow-500" title="JSON İndir"><Download size={18}/></button>
+                        <button onClick={() => setAnalysisHistory(analysisHistory.filter(i => i.id !== item.id))} className="p-2 hover:bg-slate-700 rounded-lg text-red-400" title="Sil"><Trash2 size={18}/></button>
+                      </div>
                     </div>
-                    <div class="bento-card p-6 h-48 flex flex-col justify-between relative overflow-hidden"><div class="flex justify-between items-center mb-2 relative z-10"><div><h3 class="font-bold text-gray-800 dark:text-white text-xs uppercase tracking-wider">Haftalık Trend</h3></div><span class="text-green-600 bg-green-50 px-2.5 py-1 rounded-lg text-xs font-black dark:bg-green-500/10 dark:text-green-400">+14.2%</span></div><div class="flex-1 w-full relative z-10"><canvas id="miniChart"></canvas></div></div>
+                  ))}
                 </div>
+              )}
             </div>
-        </section>
+          )}
 
-        <section id="my-plants" class="space-y-6 pb-24 scroll-mt-24"><div class="flex justify-between items-center mb-8"><h2 class="text-3xl font-extrabold text-gray-900 dark:text-white">Bitkilerim</h2><button onclick="openAddPlantModal()" class="px-5 py-2.5 bg-brand-600 text-white rounded-xl text-sm font-bold shadow-lg flex items-center gap-2 cursor-pointer"><i class="fas fa-plus"></i> Bitki Ekle</button></div><div id="my-plants-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div><div id="my-plants-empty" class="bento-card p-16 text-center flex flex-col items-center"><div class="w-20 h-20 bg-gray-100 dark:bg-white/5 rounded-full flex items-center justify-center mb-4 text-gray-300"><i class="fas fa-seedling text-3xl"></i></div><p class="text-gray-500 dark:text-gray-400 font-medium text-lg">Henüz bitki eklenmemiş.</p></div></section>
-        <section id="history" class="space-y-6 pb-24 scroll-mt-24"><div class="flex justify-between items-center mb-8"><h2 class="text-3xl font-extrabold text-gray-900 dark:text-white">Geçmiş</h2><button onclick="clearHistory()" class="text-sm text-red-500 font-bold border border-red-200 px-4 py-2 rounded-lg hover:bg-red-50 transition-colors">Temizle</button></div><div class="bento-card overflow-hidden shadow-lg overflow-x-auto"><table class="w-full text-left text-sm text-gray-600 dark:text-gray-400 min-w-[600px]"><thead class="bg-gray-50 dark:bg-black/20 text-xs font-bold uppercase tracking-wider"><tr><th class="px-8 py-5">Tarih</th><th class="px-8 py-5">Sonuç</th><th class="px-8 py-5">Skor</th></tr></thead><tbody id="history-table-body" class="divide-y divide-gray-100 dark:divide-dark-border"></tbody></table><div id="history-empty" class="p-12 text-center hidden"><p class="text-gray-400">Kayıt yok.</p></div></div></section>
-        <section id="models" class="space-y-6 pb-24 scroll-mt-24"><h2 class="text-3xl font-extrabold text-gray-900 dark:text-white mb-8">Modeller</h2><div class="grid grid-cols-1 gap-6"><div id="card-local" class="bento-card p-8 flex flex-col md:flex-row gap-8 items-start border-l-4 border-l-brand-500 cursor-pointer transition-all hover:bg-brand-50 dark:hover:bg-brand-900/10" onclick="setActiveModel('local')"><div class="w-24 h-24 rounded-2xl bg-gradient-to-br from-brand-500 to-blue-600 flex items-center justify-center text-white text-4xl shadow-xl shrink-0"><i class="fas fa-cube"></i></div><div class="flex-1"><div class="flex items-center gap-4 mb-2"><h3 class="text-2xl font-bold text-gray-900 dark:text-white">YZDBHTS_colab.h5</h3><button id="btn-local" class="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-black border border-green-200 tracking-wide">SEÇ</button></div><p class="text-gray-600 dark:text-gray-300 text-sm mb-6 leading-relaxed">Bitki hastalığı tespiti için özel olarak eğitilmiş, 12 katmanlı Konvolüsyonel Sinir Ağı (CNN) modeli. Hızlı ve internet gerektirmez.</p></div></div><div id="card-gemini" class="bento-card p-8 flex flex-col md:flex-row gap-8 items-start border-l-4 border-l-purple-500 cursor-pointer transition-all hover:bg-purple-50 dark:hover:bg-purple-900/10" onclick="setActiveModel('gemini')"><div class="w-24 h-24 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white text-4xl shadow-xl shrink-0"><i class="fas fa-robot"></i></div><div class="flex-1"><div class="flex items-center gap-4 mb-2"><h3 class="text-2xl font-bold text-gray-900 dark:text-white">Gemini 1.5 Pro</h3><button id="btn-gemini" class="px-3 py-1 rounded-full bg-gray-100 text-gray-500 text-xs font-black border border-gray-200 tracking-wide">SEÇ</button></div><p class="text-gray-600 dark:text-gray-300 text-sm mb-6 leading-relaxed">Google'ın en gelişmiş çok modlu yapay zeka modeli. Görsel analiz yetenekleri ile karmaşık hastalıkları tanımlar.</p><div id="gemini-status-text" class="font-bold text-sm text-green-500">Durum: Hazır (Simülasyon/API)</div></div></div></div></section>
-        <section id="admin-panel" class="hidden space-y-6 pb-24 scroll-mt-24 fade-in"><div class="flex justify-between items-center mb-8"><h2 class="text-3xl font-extrabold text-gray-900 dark:text-white">Yönetici Paneli</h2><span class="text-xs text-gray-400">Not: Bu panel sadece bu cihazdaki yerel kayıtları gösterir.</span></div><div class="bento-card overflow-hidden shadow-lg"><table class="w-full text-left text-sm text-gray-600 dark:text-gray-400"><thead class="bg-gray-50 dark:bg-black/20 text-xs font-bold uppercase tracking-wider"><tr><th class="px-8 py-5">Kullanıcı</th><th class="px-8 py-5">E-posta</th><th class="px-8 py-5">Rol</th><th class="px-8 py-5">Durum</th><th class="px-8 py-5">İşlem</th></tr></thead><tbody id="admin-user-list" class="divide-y divide-gray-100 dark:divide-dark-border"></tbody></table></div></section>
-
-        <section id="settings" class="space-y-6 pb-24 scroll-mt-24">
-             <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white mb-8">Ayarlar</h2>
-             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div class="bento-card p-8"><h3 class="font-bold text-lg text-gray-900 dark:text-white mb-6 border-b border-gray-100 dark:border-dark-border pb-4">Görünüm</h3><div class="grid grid-cols-3 gap-3"><button onclick="setTheme('default')" class="h-12 rounded-xl bg-green-500 shadow-lg"></button><button onclick="setTheme('ocean')" class="h-12 rounded-xl bg-blue-500 shadow-lg"></button><button onclick="setTheme('sunset')" class="h-12 rounded-xl bg-orange-500 shadow-lg"></button><button onclick="setTheme('lavender')" class="h-12 rounded-xl bg-purple-500 shadow-lg"></button><button onclick="setTheme('forest')" class="h-12 rounded-xl bg-[#65a30d] shadow-lg"></button><button onclick="setTheme('fire')" class="h-12 rounded-xl bg-[#ef4444] shadow-lg"></button><button onclick="setTheme('royal')" class="h-12 rounded-xl bg-[#d946ef] shadow-lg"></button><button onclick="setTheme('glacier')" class="h-12 rounded-xl bg-[#06b6d4] shadow-lg"></button><button onclick="setTheme('gamer')" class="h-12 rounded-xl bg-[#1b2838] border border-[#66c0f4] flex items-center justify-center text-white hover:scale-105 transition-transform"><i class="fas fa-gamepad"></i></button><button onclick="setTheme('turkey')" class="h-12 rounded-xl bg-[#E30A17] relative overflow-hidden group hover:scale-105 transition-transform"><div class="absolute inset-0 bg-[url('https://upload.wikimedia.org/wikipedia/commons/b/b4/Flag_of_Turkey.svg')] bg-cover bg-center opacity-40"></div></button><button onclick="setTheme('cyberpunk')" class="col-span-2 h-12 rounded-xl bg-black border border-yellow-400 text-yellow-400 font-black text-xs tracking-widest hover:scale-105 transition-transform">CYBERPUNK</button></div></div>
-                <!-- GEMINI API -->
-                <div class="bento-card p-8"><h3 class="font-bold text-lg text-gray-900 dark:text-white mb-6 border-b border-gray-100 dark:border-dark-border pb-4">Yapay Zeka Yapılandırması</h3><div class="space-y-4"><label class="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-2 uppercase">Gemini API Anahtarı</label><input type="password" id="gemini-key" class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-dark-border dark:bg-black/20 text-sm outline-none dark:text-white" placeholder="AI Studio Key"><button onclick="saveGeminiKey()" class="w-full py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-bold text-sm transition-colors">Anahtarı Kaydet</button></div></div>
-                <div class="bento-card p-8"><h3 class="font-bold text-lg text-gray-900 dark:text-white mb-6 border-b border-gray-100 dark:border-dark-border pb-4">Hesap</h3><div class="flex items-center gap-4 mb-6"><img id="settings-avatar" src="" class="w-20 h-20 rounded-full border-4 border-gray-100 dark:border-dark-border"><div><h4 class="font-bold text-xl text-gray-900 dark:text-white">Kullanıcı</h4></div></div><button onclick="document.getElementById('avatar-upload').click()" class="text-sm bg-gray-900 text-white px-4 py-2 rounded-lg font-bold hover:bg-gray-800 cursor-pointer">Fotoğrafı Değiştir</button><input type="file" id="avatar-upload" class="hidden" accept="image/*" onchange="handleAvatarChange(event)"></div>
-                <div class="bento-card p-8 col-span-1 lg:col-span-2"><h3 class="font-bold text-lg text-gray-900 dark:text-white mb-6 border-b border-gray-100 dark:border-dark-border pb-4">Sistem Yönetimi</h3><div class="flex justify-between items-center"><p class="text-sm text-gray-500">Tüm yerel verileri (kullanıcılar, bitkiler, geçmiş) siler.</p><button onclick="resetApp()" class="px-6 py-2 bg-red-600 text-white rounded-xl font-bold text-sm">Tüm Verileri Temizle</button></div></div>
-                <div class="bento-card p-8 col-span-1 lg:col-span-2"><form onsubmit="saveProfileSettings(event)" class="space-y-5"><div class="grid grid-cols-1 md:grid-cols-2 gap-5"><div><label class="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-2 uppercase">Ad Soyad</label><input type="text" id="settings-name" class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-dark-border dark:bg-black/20 text-sm focus:ring-2 focus:ring-brand-500 outline-none dark:text-gray-200"></div><div><label class="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-2 uppercase">E-posta</label><input type="email" id="settings-email" disabled class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-dark-border bg-gray-50 dark:bg-white/5 text-sm text-gray-500 cursor-not-allowed"></div></div><div class="pt-4 flex justify-end"><button type="submit" class="px-8 py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-sm font-bold shadow-lg">Kaydet</button></div></form></div>
-             </div>
-        </section>
-
-        <section id="about" class="space-y-12 pb-24 scroll-mt-24"><div class="bento-card overflow-hidden"><div class="h-64 bg-gradient-to-r from-brand-600 to-green-400 flex items-center justify-center text-white text-center p-6"><div><i class="fas fa-leaf text-6xl mb-4 drop-shadow-lg"></i><h2 class="text-4xl font-extrabold drop-shadow-md">YZDBTKS</h2><p class="text-lg opacity-90 font-medium">Yapay Zeka Destekli Tarım Teknolojileri</p></div></div><div class="p-10 prose dark:prose-invert max-w-none text-gray-600 dark:text-gray-300 leading-loose text-lg"><p>YZDBTKS, tarımsal verimliliği artırmak ve bitki hastalıklarını erken evrede tespit etmek amacıyla geliştirilmiş yapay zeka tabanlı bir teşhis sistemidir.</p></div></div></section>
-        
-        <section id="who-we-are" class="space-y-12 pb-24 scroll-mt-24">
-            <div class="text-center mb-12"><h2 class="text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight">Ekibimiz</h2></div>
-            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8">
-                <div class="bento-card p-8 text-center hover:-translate-y-2 transition-transform duration-300 group"><img src="https://ui-avatars.com/api/?name=Ayberk+Arici&background=10b981&color=fff&size=128" class="w-32 h-32 rounded-full mx-auto mb-6 border-4 border-white dark:border-dark-bg shadow-lg"><h3 class="text-xl font-bold text-gray-900 dark:text-white">Ayberk ARICI</h3><p class="text-brand-600 font-bold text-sm mb-4 uppercase tracking-wide">Proje Yöneticisi & Kod</p></div>
-                 <div class="bento-card p-8 text-center hover:-translate-y-2 transition-transform duration-300 group"><img src="https://ui-avatars.com/api/?name=Ahmet+Akif+Abus&background=0ea5e9&color=fff&size=128" class="w-32 h-32 rounded-full mx-auto mb-6 border-4 border-white dark:border-dark-bg shadow-lg"><h3 class="text-xl font-bold text-gray-900 dark:text-white">Ahmet Akif ABUŞ</h3><p class="text-blue-600 font-bold text-sm mb-4 uppercase tracking-wide">Backend & Frontend</p></div>
-                 <div class="bento-card p-8 text-center hover:-translate-y-2 transition-transform duration-300 group"><img src="https://ui-avatars.com/api/?name=Selim+Erdem&background=8b5cf6&color=fff&size=128" class="w-32 h-32 rounded-full mx-auto mb-6 border-4 border-white dark:border-dark-bg shadow-lg"><h3 class="text-xl font-bold text-gray-900 dark:text-white">Selim ERDEM</h3><p class="text-purple-600 font-bold text-sm mb-4 uppercase tracking-wide">Backend Geliştirici</p></div>
-                 <div class="bento-card p-8 text-center hover:-translate-y-2 transition-transform duration-300 group"><img src="https://ui-avatars.com/api/?name=Ahmet+Ensar+Almak&background=f59e0b&color=fff&size=128" class="w-32 h-32 rounded-full mx-auto mb-6 border-4 border-white dark:border-dark-bg shadow-lg"><h3 class="text-xl font-bold text-gray-900 dark:text-white">Ahmet Ensar ALMAK</h3><p class="text-yellow-600 font-bold text-sm mb-4 uppercase tracking-wide">Backend Geliştirici</p></div>
-            </div>
-            <div class="text-center mb-8 mt-12"><h3 class="text-2xl font-bold text-gray-800 dark:text-gray-200">Proje Danışmanları</h3></div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                <div class="bento-card p-8 text-center border-t-4 border-t-red-500"><img src="https://ui-avatars.com/api/?name=Ahmet+Esat+Kalkan&background=ef4444&color=fff&size=128" class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-white dark:border-dark-bg shadow-lg"><h3 class="text-xl font-bold text-gray-900 dark:text-white">Ahmet Esat KALKAN</h3><p class="text-red-500 font-bold text-sm uppercase tracking-wide">Bilişim Öğretmeni</p></div>
-                <div class="bento-card p-8 text-center border-t-4 border-t-pink-500"><img src="https://ui-avatars.com/api/?name=Semra+Canpolat&background=ec4899&color=fff&size=128" class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-white dark:border-dark-bg shadow-lg"><h3 class="text-xl font-bold text-gray-900 dark:text-white">Semra CANPOLAT</h3><p class="text-pink-500 font-bold text-sm uppercase tracking-wide">Bilişim Öğretmeni</p></div>
-            </div>
-            <div class="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-                <div class="bento-card p-6 text-center">
-                    <h3 class="font-bold text-gray-800 dark:text-white mb-4">Sponsorlar</h3>
-                    <div class="p-4 bg-gray-50 dark:bg-white/5 rounded-xl w-full border border-gray-200 dark:border-dark-border"><h4 class="font-bold text-brand-600 dark:text-brand-400 text-lg">NOKTA GİYİM</h4><p class="text-xs text-gray-500 uppercase tracking-widest">Sakarya</p></div>
-                </div>
-                <div class="bento-card p-6">
-                    <h3 class="font-bold text-gray-800 dark:text-white mb-4 text-center">Sponsorluk & İletişim</h3>
-                    <div class="space-y-3 text-sm">
-                        <a href="mailto:sunaycapa3@gmail.com" class="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-white/5 hover:bg-brand-50 dark:hover:bg-brand-900/10 transition-colors"><div class="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center"><i class="fas fa-envelope"></i></div><span class="text-gray-600 dark:text-gray-300 text-xs sm:text-sm">sunaycapa3@gmail.com</span></a>
-                        <a href="mailto:a.selimerdem0303@gmail.com" class="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-white/5 hover:bg-brand-50 dark:hover:bg-brand-900/10 transition-colors"><div class="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center"><i class="fas fa-envelope"></i></div><span class="text-gray-600 dark:text-gray-300 text-xs sm:text-sm">a.selimerdem0303@gmail.com</span></a>
-                        <a href="mailto:ahmetakifabus91@proton.me" class="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-white/5 hover:bg-brand-50 dark:hover:bg-brand-900/10 transition-colors"><div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center"><i class="fas fa-envelope"></i></div><span class="text-gray-600 dark:text-gray-300 text-xs sm:text-sm">ahmetakifabus91@proton.me</span></a>
-                        <a href="mailto:yzdbhtks@proton.me" class="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-white/5 hover:bg-brand-50 dark:hover:bg-brand-900/10 transition-colors"><div class="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center"><i class="fas fa-envelope"></i></div><span class="text-gray-600 dark:text-gray-300 text-xs sm:text-sm">yzdbhtks@proton.me</span></a>
+          {/* SETTINGS VIEW (NEW) */}
+          {currentView === 'settings' && (
+            <div className="max-w-4xl mx-auto space-y-8">
+              
+              {/* Theme Settings */}
+              <div className={`p-6 rounded-2xl ${darkMode ? 'bg-slate-800' : 'bg-white'} shadow-lg`}>
+                <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+                  <Palette className={theme.text} /> Görünüm ve Tema
+                </h3>
+                
+                <div className="space-y-6">
+                  <div>
+                    <label className="text-sm text-gray-400 block mb-3">Renk Teması</label>
+                    <div className="flex flex-wrap gap-4">
+                      {Object.entries(THEME_STYLES).map(([key, style]) => (
+                        <button
+                          key={key}
+                          onClick={() => setThemeColor(key)}
+                          className={`flex items-center gap-2 px-4 py-3 rounded-xl border-2 transition-all ${themeColor === key ? `${style.border} ${style.bgLight}` : 'border-gray-700 hover:border-gray-500'}`}
+                        >
+                          <div className={`w-4 h-4 rounded-full`} style={{backgroundColor: style.hex}}></div>
+                          <span className={themeColor === key ? `font-bold ${style.text}` : ''}>{style.name}</span>
+                        </button>
+                      ))}
                     </div>
+                  </div>
                 </div>
+              </div>
+
+              {/* User Settings */}
+              <div className={`p-6 rounded-2xl ${darkMode ? 'bg-slate-800' : 'bg-white'} shadow-lg`}>
+                <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+                  <Users className={theme.text} /> Profil Ayarları
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm text-gray-400">Ad Soyad</label>
+                    <input type="text" defaultValue={user.name} className={`w-full p-3 rounded-lg ${darkMode ? 'bg-slate-900' : 'bg-gray-100'} border-none`} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm text-gray-400">E-posta</label>
+                    <input type="email" defaultValue={user.email} className={`w-full p-3 rounded-lg ${darkMode ? 'bg-slate-900' : 'bg-gray-100'} border-none`} />
+                  </div>
+                  <div className="col-span-full">
+                     <button className={`${theme.bg} ${theme.bgHover} text-white px-6 py-2 rounded-lg flex items-center gap-2`}>
+                       <Save size={18}/> Değişiklikleri Kaydet
+                     </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Admin Panel (Conditional) */}
+              {user.role === 'admin' && (
+                <div className={`p-6 rounded-2xl ${darkMode ? 'bg-slate-800' : 'bg-white'} border-2 border-red-500/30 shadow-lg`}>
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-xl font-bold flex items-center gap-2 text-red-400">
+                      <ShieldCheck /> Yönetici Paneli - Kullanıcı Yönetimi
+                    </h3>
+                    <span className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">Sadece Admin</span>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="border-b border-gray-700 text-gray-400 text-sm">
+                          <th className="p-3">ID</th>
+                          <th className="p-3">Kullanıcı</th>
+                          <th className="p-3">Plan</th>
+                          <th className="p-3 text-right">İşlemler</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {usersList.map(u => (
+                          <tr key={u.id} className="border-b border-gray-700/50 hover:bg-white/5">
+                            <td className="p-3 font-mono text-xs">{u.id}</td>
+                            <td className="p-3">
+                              <div className="font-bold">{u.name}</div>
+                              <div className="text-xs text-gray-500">{u.email}</div>
+                            </td>
+                            <td className="p-3">
+                              <select 
+                                value={u.plan}
+                                onChange={(e) => changeUserPlan(u.id, e.target.value)}
+                                className={`bg-transparent border border-gray-600 rounded p-1 text-sm outline-none focus:${theme.border}`}
+                              >
+                                <option value="normal">Normal</option>
+                                <option value="bitkiseven">Bitkiseven</option>
+                                <option value="bahcivan">Bahçıvan</option>
+                              </select>
+                            </td>
+                            <td className="p-3 text-right">
+                              <button onClick={() => deleteUser(u.id)} className="text-red-400 hover:text-red-300 p-2 hover:bg-red-500/10 rounded">
+                                <Trash2 size={16} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </div>
-            <div class="mt-16 text-center text-xs text-gray-400 font-bold tracking-widest pb-10">YZDBTKS &copy; 2026 - Tüm Hakları Saklıdır.</div>
-        </section>
+          )}
 
-    </main>
+          {/* PLANS VIEW */}
+          {currentView === 'plans' && (
+            <div className="space-y-8">
+               <div className="text-center">
+                  <h3 className="text-3xl font-bold mb-2">Abonelik Planları</h3>
+                  <p className="text-gray-400">İhtiyacınıza uygun paketi seçin, bahçenizi koruyun.</p>
+               </div>
+               
+               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+                  {SUBSCRIPTION_PLANS.map((plan) => (
+                    <div key={plan.id} className={`relative p-8 rounded-2xl border transition-all duration-300 hover:scale-105 ${
+                      plan.id === 'bahcivan' ? `${theme.border} bg-slate-800 shadow-2xl` : 
+                      darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'
+                    }`}>
+                      {plan.id === 'bahcivan' && (
+                        <div className={`absolute top-0 right-0 ${theme.bg} text-white text-xs font-bold px-3 py-1 rounded-bl-xl rounded-tr-xl`}>
+                          ÖNERİLEN
+                        </div>
+                      )}
+                      <h4 className="text-xl font-bold mb-2">{plan.name}</h4>
+                      <div className="flex items-end gap-1 mb-6">
+                        <span className="text-4xl font-bold">{plan.price} TL</span>
+                        <span className="text-gray-400 mb-1">/aylık</span>
+                      </div>
+                      
+                      <ul className="space-y-3 mb-8">
+                        {plan.features.map((feat, i) => (
+                          <li key={i} className="flex items-center gap-2 text-sm">
+                            <CheckCircle size={16} className={theme.text} flex-shrink-0 />
+                            <span className="text-gray-300">{feat}</span>
+                          </li>
+                        ))}
+                      </ul>
 
-    <!-- AUTH MODAL -->
-    <div id="auth-modal" class="modal fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm hidden">
-        <div class="glass-card w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl relative bg-white dark:bg-gray-900">
-            <button onclick="closeModal('auth-modal')" class="absolute top-6 right-6 dark:text-white"><i class="fas fa-times text-xl"></i></button>
-            <h2 id="auth-title" class="text-2xl font-bold text-center mb-6 dark:text-white">Giriş Yap</h2>
-            <div class="flex border-b border-gray-200 dark:border-dark-border mb-6"><button id="tab-login" onclick="toggleAuthTab('login')" class="flex-1 pb-2 text-sm font-bold text-brand-600 border-b-2 border-brand-600">Giriş Yap</button><button id="tab-register" onclick="toggleAuthTab('register')" class="flex-1 pb-2 text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white">Kayıt Ol</button></div>
-            <form id="form-login" onsubmit="handleLogin(event)" class="space-y-4"><input type="email" id="login-email" class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-dark-border dark:bg-black/30 outline-none focus:border-brand-500 transition-colors" placeholder="E-posta"><input type="password" id="login-password" class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-dark-border dark:bg-black/30 outline-none focus:border-brand-500 transition-colors" placeholder="Şifre"><button type="submit" class="w-full py-3 bg-brand-600 text-white font-bold rounded-xl shadow-lg shadow-brand-500/30 hover:scale-[1.02] transition-transform">GİRİŞ YAP</button><div class="text-center"><button type="button" onclick="loginDemo()" class="text-xs font-bold text-gray-500 hover:text-brand-600">Demo Girişi</button></div></form>
-            <form id="form-register" onsubmit="handleRegister(event)" class="space-y-4 hidden"><input type="text" id="reg-name" class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-dark-border dark:bg-black/30 outline-none focus:border-brand-500 transition-colors" placeholder="Ad Soyad"><input type="email" id="reg-email" class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-dark-border dark:bg-black/30 outline-none focus:border-brand-500 transition-colors" placeholder="E-posta"><input type="password" id="reg-password" class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-dark-border dark:bg-black/30 outline-none focus:border-brand-500 transition-colors" placeholder="Şifre"><button type="submit" class="w-full py-3 bg-brand-600 text-white font-bold rounded-xl shadow-lg shadow-brand-500/30 hover:scale-[1.02] transition-transform">KAYIT OL</button></form>
-        </div>
+                      <button 
+                        onClick={() => {
+                          if (user.role === 'admin') {
+                            alert("Admin hesabına zaten tüm paketler tanımlıdır.");
+                          } else {
+                            setUser({...user, plan: plan.id});
+                            alert(`${plan.name} paketine geçiş yapıldı!`);
+                          }
+                        }}
+                        className={`w-full py-3 rounded-lg font-semibold transition-colors ${
+                          user.plan === plan.id 
+                          ? 'bg-gray-600 cursor-default' 
+                          : plan.id === 'bahcivan' ? `${theme.bg} ${theme.bgHover} text-white` : 'bg-slate-700 hover:bg-slate-600 text-white'
+                        }`}
+                      >
+                        {user.plan === plan.id ? 'Mevcut Plan' : 'Satın Al'}
+                      </button>
+                    </div>
+                  ))}
+               </div>
+            </div>
+          )}
+
+          {/* TEAM VIEW */}
+          {currentView === 'team' && (
+            <div className="space-y-8">
+              <div className="text-center mb-12">
+                <h3 className="text-3xl font-bold mb-2">Ekibimiz</h3>
+                <p className="text-gray-400">Bu projeye hayat veren yetenekli kadro.</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {TEAM_MEMBERS.map((member, idx) => (
+                  <div key={idx} className={`p-6 rounded-2xl flex items-center gap-4 ${darkMode ? 'bg-slate-800' : 'bg-white'} border border-slate-700/50 hover:border-gray-500 transition-colors`}>
+                    <div className={`w-14 h-14 rounded-full ${member.color} flex items-center justify-center text-white font-bold text-xl shadow-lg`}>
+                      {member.name.split(' ').map(n => n[0]).join('')}
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-lg">{member.name}</h4>
+                      <p className={`text-sm ${theme.text} font-medium`}>{member.role}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-12 p-6 rounded-xl bg-slate-800/50 border border-slate-700 text-center">
+                 <p className="text-gray-400 text-sm">
+                   Bu proje TÜBİTAK araştırmaları kapsamında geliştirilmiştir. <br/>
+                   İletişim: <span className={theme.text}>yzdbhtks@proton.me</span>
+                 </p>
+              </div>
+            </div>
+          )}
+
+        </main>
+      </div>
     </div>
-    
-    <div id="password-modal" class="modal fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm hidden"><div class="glass-card w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl relative bg-white dark:bg-gray-900"><button onclick="closeModal('password-modal')" class="absolute top-6 right-6 dark:text-white"><i class="fas fa-times text-xl"></i></button><h2 class="text-xl font-bold text-center mb-6 dark:text-white">Şifre Değiştir</h2><form onsubmit="handleChangePassword(event)" class="space-y-4"><input type="password" id="old-pw" class="w-full p-4 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white border-none" placeholder="Eski Şifre"><input type="password" id="new-pw" class="w-full p-4 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white border-none" placeholder="Yeni Şifre"><input type="password" id="confirm-pw" class="w-full p-4 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-white border-none" placeholder="Yeni Şifre (Tekrar)"><button type="submit" class="w-full py-3 bg-brand-600 text-white rounded-xl font-bold shadow-lg">GÜNCELLE</button></form></div></div>
-    <div id="add-plant-modal" class="modal fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-black/50 hidden px-4"><div class="bg-white dark:bg-dark-panel w-full max-w-md rounded-3xl shadow-2xl p-6 md:p-8 relative"><button onclick="closeAddPlantModal()" class="absolute top-4 right-4 text-gray-400"><i class="fas fa-times text-xl"></i></button><h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Bitki Ekle</h2><form onsubmit="handleAddPlant(event)" class="space-y-4"><input type="text" id="plant-name" class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-dark-border dark:bg-black/30 outline-none focus:border-brand-500" placeholder="Bitki Adı" required><div class="flex gap-2"><button type="button" onclick="document.getElementById('plant-image-file').click()" class="flex-1 py-3 bg-gray-100 dark:bg-white/10 rounded-lg text-sm font-medium hover:bg-gray-200 dark:hover:bg-white/20 transition-colors flex items-center justify-center gap-2"><i class="fas fa-folder-open"></i> Dosya</button><button type="button" onclick="document.getElementById('plant-image-camera').click()" class="flex-1 py-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg text-sm font-medium hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors flex items-center justify-center gap-2"><i class="fas fa-camera"></i> Çek</button></div><input type="file" id="plant-image-file" class="hidden" accept="image/*" onchange="previewPlantImage(this)"><input type="file" id="plant-image-camera" class="hidden" accept="image/*" capture="environment" onchange="previewPlantImage(this)"><div id="plant-image-preview-container" class="hidden mt-4 relative rounded-xl overflow-hidden h-40 bg-gray-100"><img id="plant-image-preview" src="" class="w-full h-full object-cover"><button type="button" onclick="downloadPlantPDF()" class="absolute bottom-2 right-2 bg-red-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg flex items-center gap-1"><i class="fas fa-file-pdf"></i> PDF</button></div><button type="submit" class="w-full py-3 bg-brand-600 text-white font-bold rounded-xl shadow-lg mt-4">Kaydet</button></form></div></div>
-
-    <script>
-        window.addEventListener('load', () => { setTimeout(() => document.getElementById('global-loader').style.display='none', 800); initDB(); checkAuth(); loadPlants(); loadHistory(); updateModelSelectionUI(); document.getElementById('current-date').innerText = new Date().toLocaleDateString('tr-TR'); });
-        
-        // SELF-HEALING DATABASE (AUTO REPAIR)
-        function initDB() { 
-            let db = localStorage.getItem('usersDB');
-            if (!db) { 
-                createDefaultDB(); 
-            } else {
-                let users = JSON.parse(db);
-                // Ensure Admin exists and force password sync
-                let adminIdx = users.findIndex(u => u.email === "yzdbhtks@proton.me");
-                if (adminIdx === -1) {
-                    users.unshift({ email: "yzdbhtks@proton.me", pass: "2026_yzdbhtks_buyuyor", name: "YZDBHTKS", role: "admin", isVerified: true, avatar: "https://ui-avatars.com/api/?name=YZDBHTKS&background=059669&color=fff" });
-                } else {
-                    // Force update password to solve login issues
-                    users[adminIdx].pass = "2026_yzdbhtks_buyuyor";
-                }
-                
-                // Cleanup old 'admin' email if exists to avoid confusion
-                users = users.filter(u => u.email !== "admin@yzbdtks.com");
-
-                // Ensure demo exists
-                if (!users.find(u => u.email === "demo@gmail.com")) {
-                     users.push({ email: "demo@gmail.com", pass: "1a2b3c4d5e", name: "Demo Hesap", role: "user", isVerified: false, avatar: "https://ui-avatars.com/api/?name=Demo&background=3b82f6&color=fff" });
-                }
-                
-                localStorage.setItem('usersDB', JSON.stringify(users));
-            }
-        }
-        function createDefaultDB() {
-            const defaultUsers = [ 
-                { email: "yzdbhtks@proton.me", pass: "2026_yzdbhtks_buyuyor", name: "YZDBHTKS", role: "admin", isVerified: true, avatar: "https://ui-avatars.com/api/?name=YZDBHTKS&background=059669&color=fff" }, 
-                { email: "demo@gmail.com", pass: "1a2b3c4d5e", name: "Demo Hesap", role: "user", isVerified: false, avatar: "https://ui-avatars.com/api/?name=Demo&background=3b82f6&color=fff" } 
-            ]; 
-            localStorage.setItem('usersDB', JSON.stringify(defaultUsers));
-        }
-        function resetApp() { if(confirm('TÜM VERİLER SİLİNECEK ve fabrika ayarlarına dönülecek. Emin misiniz?')) { localStorage.clear(); location.reload(); } }
-
-        function getUsers() { return JSON.parse(localStorage.getItem('usersDB')); }
-        function saveUsers(u) { localStorage.setItem('usersDB', JSON.stringify(u)); }
-        let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
-        let isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-
-        // --- Model Selection Logic ---
-        function setActiveModel(model) {
-            localStorage.setItem('activeModel', model);
-            updateModelSelectionUI();
-            const select = document.getElementById('ai-model-select');
-            if(select) select.value = model;
-        }
-
-        function updateModelSelectionUI() {
-            const active = localStorage.getItem('activeModel') || 'local';
-            document.getElementById('card-local').classList.remove('model-card-active');
-            document.getElementById('card-gemini').classList.remove('model-card-active');
-            document.getElementById('btn-local').className = "px-3 py-1 rounded-full bg-gray-100 text-gray-500 text-xs font-black border border-gray-200 tracking-wide";
-            document.getElementById('btn-local').innerText = "SEÇ";
-            document.getElementById('btn-gemini').className = "px-3 py-1 rounded-full bg-gray-100 text-gray-500 text-xs font-black border border-gray-200 tracking-wide";
-            document.getElementById('btn-gemini').innerText = "SEÇ";
-
-            if(active === 'local') {
-                document.getElementById('card-local').classList.add('model-card-active');
-                document.getElementById('btn-local').className = "px-3 py-1 rounded-full bg-brand-600 text-white text-xs font-black tracking-wide shadow-md";
-                document.getElementById('btn-local').innerText = "KULLANILIYOR";
-            } else {
-                document.getElementById('card-gemini').classList.add('model-card-active');
-                document.getElementById('btn-gemini').className = "px-3 py-1 rounded-full bg-purple-600 text-white text-xs font-black tracking-wide shadow-md";
-                document.getElementById('btn-gemini').innerText = "KULLANILIYOR";
-            }
-            const select = document.getElementById('ai-model-select');
-            if(select) select.value = active;
-        }
-
-        // Auth
-        function checkAuth() {
-            const area = document.getElementById('desktop-auth');
-            const mobileArea = document.getElementById('mobile-auth-container');
-            const adminLink = document.getElementById('nav-admin-link');
-            const mobileAdminLink = document.getElementById('mobile-admin-link');
-            const headerAvatar = document.getElementById('header-avatar');
-            const mobileHeaderAvatar = document.getElementById('mobile-header-avatar');
-            const settingsName = document.getElementById('settings-name');
-            const settingsEmail = document.getElementById('settings-email');
-            const settingsAvatar = document.getElementById('settings-avatar');
-            const ddAvatar = document.getElementById('dropdown-avatar');
-            const ddName = document.getElementById('dropdown-name');
-            const ddEmail = document.getElementById('dropdown-email');
-            const verifyBadge = document.getElementById('verify-badge');
-            const verifyBtn = document.getElementById('verify-btn');
-
-            if(isLoggedIn && currentUser) {
-                const profileHtml = `<div class="relative"><div class="flex items-center gap-3 cursor-pointer" onclick="toggleProfileMenu()"><img src="${currentUser.avatar}" class="w-10 h-10 rounded-full border-2 border-brand-500 object-cover shadow-sm"><div class="hidden lg:block text-right"><p class="text-xs font-bold text-gray-900 dark:text-white truncate max-w-[100px]">${currentUser.name}</p><p class="text-[10px] text-green-500 font-bold uppercase">Çevrimiçi</p></div></div></div>`;
-                area.innerHTML = profileHtml;
-                mobileArea.innerHTML = `<div class="flex items-center gap-4 p-4 bg-gray-50 dark:bg-white/5 rounded-2xl"><img src="${currentUser.avatar}" class="w-12 h-12 rounded-full border-2 border-brand-500 object-cover"><div class="flex-1"><h4 class="font-bold text-gray-900 dark:text-white truncate">${currentUser.name}</h4><p class="text-xs text-green-500 font-bold uppercase">Çevrimiçi</p></div><button onclick="logout()" class="bg-red-100 text-red-600 p-2 rounded-lg"><i class="fas fa-sign-out-alt"></i></button></div>`;
-                
-                if(currentUser.role === 'admin') { if(adminLink) adminLink.classList.remove('hidden'); if(mobileAdminLink) mobileAdminLink.classList.remove('hidden'); document.getElementById('admin-panel').classList.remove('hidden'); } else { if(adminLink) adminLink.classList.add('hidden'); if(mobileAdminLink) mobileAdminLink.classList.add('hidden'); }
-                if(settingsName) settingsName.value = currentUser.name;
-                if(settingsEmail) settingsEmail.value = currentUser.email;
-                if(settingsAvatar) settingsAvatar.src = currentUser.avatar;
-                if(ddAvatar) ddAvatar.src = currentUser.avatar;
-                if(ddName) ddName.innerText = currentUser.name;
-                if(ddEmail) ddEmail.innerText = currentUser.email;
-                if(verifyBadge) { verifyBadge.className = currentUser.isVerified ? 'text-xs font-bold px-2 py-0.5 rounded-md bg-green-100 text-green-700' : 'text-xs font-bold px-2 py-0.5 rounded-md bg-yellow-100 text-yellow-700'; verifyBadge.innerText = currentUser.isVerified ? 'Onaylı' : 'Onaysız'; }
-                if(verifyBtn) verifyBtn.style.display = currentUser.isVerified ? 'none' : 'flex';
-            } else {
-                const btns = `<button onclick="openAuthModal('login')" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-bold shadow-sm text-xs mr-2">Giriş Yap</button><button onclick="openAuthModal('register')" class="px-4 py-2 border border-brand-600 text-brand-600 hover:bg-brand-50 dark:hover:bg-white/10 rounded-lg font-bold shadow-sm text-xs">Kayıt Ol</button>`;
-                area.innerHTML = btns;
-                mobileArea.innerHTML = `<button onclick="openAuthModal('login')" class="w-full py-3 bg-brand-600 text-white rounded-2xl font-bold text-lg shadow-lg mb-2">Giriş Yap</button><button onclick="openAuthModal('register')" class="w-full py-3 bg-white border-2 border-brand-600 text-brand-600 rounded-2xl font-bold text-lg shadow-lg">Kayıt Ol</button>`;
-                if(adminLink) adminLink.classList.add('hidden');
-                if(mobileAdminLink) mobileAdminLink.classList.add('hidden');
-            }
-        }
-
-        // ... (Functions) ...
-        function toggleProfileMenu(){document.getElementById('profile-dropdown').classList.toggle('hidden')}
-        document.addEventListener('click',function(e){const dd=document.getElementById('profile-dropdown');const auth=document.getElementById('desktop-auth');if(dd&&!dd.classList.contains('hidden')&&!auth.contains(e.target)){dd.classList.add('hidden');}});
-        function handleLogin(e){e.preventDefault();const em=document.getElementById('login-email').value.trim();const pw=document.getElementById('login-password').value.trim();const users=getUsers();const user=users.find(u=>u.email===em&&u.pass===pw);if(user){loginUser(user);}else{alert("Hatalı E-posta veya Şifre!");}}
-        function handleRegister(e){e.preventDefault();const n=document.getElementById('reg-name').value;const em=document.getElementById('reg-email').value.trim();const pw=document.getElementById('reg-pw').value.trim();if(n&&em&&pw){const u={email:em,pass:pw,name:n,role:'user',isVerified:false,avatar:`https://ui-avatars.com/api/?name=${n.replace(' ','+')}&background=2563eb&color=fff`};const db=getUsers();db.push(u);saveUsers(db);loginUser(u);}}
-        function loginUser(u){currentUser=u;isLoggedIn=true;localStorage.setItem('isLoggedIn','true');localStorage.setItem('currentUser',JSON.stringify(u));checkAuth();closeModal('auth-modal');alert("Giriş Başarılı!");scrollToSection('dashboard');}
-        function logout(){localStorage.removeItem('currentUser');isLoggedIn=false;checkAuth();window.location.reload();}
-        function loginDemo(){document.getElementById('login-email').value="demo@gmail.com";document.getElementById('login-password').value="1a2b3c4d5e";handleLogin({preventDefault:()=>{}});}
-        function verifyEmail(){if(prompt("Kod (1234):")==="1234"){currentUser.isVerified=true;localStorage.setItem('currentUser',JSON.stringify(currentUser));const u=getUsers();const i=u.findIndex(x=>x.email===currentUser.email);if(i!==-1){u[i].isVerified=true;saveUsers(u);}checkAuth();alert("Doğrulandı!");}}
-        function handleChangePassword(e){e.preventDefault();const o=document.getElementById('old-pw').value;const n=document.getElementById('new-pw').value;const cf=document.getElementById('confirm-pw').value;if(nw!==cf)return alert("Uyuşmuyor");if(o!==currentUser.pass)return alert("Eski yanlış");currentUser.pass=n;localStorage.setItem('currentUser',JSON.stringify(currentUser));const u=getUsers();const i=u.findIndex(x=>x.email===currentUser.email);if(i!==-1){u[i].pass=n;saveUsers(u);}closeModal('password-modal');alert("Değişti");logout();}
-        function openChangePasswordModal(){openModal('password-modal');}
-        function scrollToSection(id){document.querySelectorAll('section').forEach(s=>{s.classList.add('hidden');s.classList.remove('fade-in');});const t=document.getElementById(id);if(t){t.classList.remove('hidden');t.classList.add('fade-in');window.scrollTo({top:0,behavior:'smooth'});}if(id==='admin-panel')loadAdminUsers();if(id==='history')updateHistoryTable();if(id==='my-plants')updateMyPlantsGrid();document.getElementById('mobile-menu').classList.add('hidden');}
-        function switchTab(id){scrollToSection(id);}
-        function toggleMobileMenu(){document.getElementById('mobile-menu').classList.toggle('hidden');}
-        function openModal(id){document.getElementById(id).classList.remove('hidden');}
-        function closeModal(id){document.getElementById(id).classList.add('hidden');}
-        function toggleAuthTab(t){if(t==='login'){document.getElementById('form-login').classList.remove('hidden');document.getElementById('form-register').classList.add('hidden');}else{document.getElementById('form-login').classList.add('hidden');document.getElementById('form-register').classList.remove('hidden');}}
-        let pendingPlantImg=null;let currentAnalysis=null;
-        function openAddPlantModal(){openModal('add-plant-modal');}
-        function closeAddPlantModal(){closeModal('add-plant-modal');}
-        function previewPlantImage(i){if(i.files[0]){const r=new FileReader();r.onload=e=>{pendingPlantImg=e.target.result;document.getElementById('plant-image-preview').src=pendingPlantImg;document.getElementById('plant-image-preview-container').classList.remove('hidden');};r.readAsDataURL(i.files[0]);}}
-        function handleAddPlant(e){e.preventDefault();const n=document.getElementById('plant-name').value;if(n&&pendingPlantImg){let p=JSON.parse(localStorage.getItem('plants')||'[]');p.push({name:n,img:pendingPlantImg,date:new Date().toLocaleDateString()});localStorage.setItem('plants',JSON.stringify(p));loadPlants();closeAddPlantModal();}}
-        function loadPlants(){const p=JSON.parse(localStorage.getItem('plants')||'[]');document.getElementById('my-plants-grid').innerHTML=p.map((x,i)=>`<div class="bento-card p-4"><img src="${x.img}" class="w-full h-32 object-cover rounded"><p class="mt-2 font-bold dark:text-white">${x.name}</p><button onclick="delPlant(${i})" class="text-red-500 text-xs">Sil</button></div>`).join('');}
-        function delPlant(i){let p=JSON.parse(localStorage.getItem('plants'));p.splice(i,1);localStorage.setItem('plants',JSON.stringify(p));loadPlants();}
-        function downloadPlantPDF(){const {jsPDF}=window.jspdf;const d=new jsPDF();d.text("Bitki",10,10);d.addImage(pendingPlantImg,'JPEG',10,20,100,100);d.save('bitki.pdf');}
-        function checkGemini(){const k=localStorage.getItem('geminiKey');const t=document.getElementById('gemini-status-text');if(t){if(k){t.innerText="Aktif (API Bağlı)";t.className="font-bold text-sm text-green-600";}else{t.innerText="Hazır (Simülasyon Modu)";t.className="font-bold text-sm text-blue-500";}}if(k)document.getElementById('gemini-key').value=k;}
-        function saveGeminiKey(){const k=document.getElementById('gemini-key').value;if(k){localStorage.setItem('geminiKey',k);alert("API Anahtarı Kaydedildi!");checkGemini();}}
-        async function handleFile(input){if(input.files[0]){const r=new FileReader();r.onload=async(e)=>{document.getElementById('drop-zone').classList.add('hidden');document.getElementById('preview-img').src=e.target.result;document.getElementById('preview-img').classList.remove('hidden');document.getElementById('scanner-overlay').classList.remove('hidden');document.getElementById('res-empty').classList.add('hidden');const apiKey=localStorage.getItem('geminiKey');const base64Data=e.target.result.split(',')[1];const selectedModel=document.getElementById('ai-model-select').value;if(selectedModel==='gemini'&&apiKey){try{const p="Bu bitki yaprağındaki hastalığı tespit et. Sadece JSON formatında cevap ver: {\"title\": \"Hastalık Adı\", \"score\": 95, \"desc\": \"Detaylı açıklama\", \"action\": \"Tedavi önerisi\"}. Eğer bitki değilse title: 'Bitki Değil' de.";const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:p},{inline_data:{mime_type:"image/jpeg",data:base64Data}}]}]})});const d=await res.json();const t=d.candidates[0].content.parts[0].text;const j=t.replace(/```json/g,'').replace(/```/g,'').trim();showResult(JSON.parse(j),e.target.result);}catch(error){console.error(error);alert("API Hatası! Simülasyon moduna geçiliyor.");simulateAnalysis(e.target.result);}}else{setTimeout(()=>simulateAnalysis(e.target.result),2000);}};r.readAsDataURL(input.files[0]);}}
-        function resetAnalysis(){document.getElementById('drop-zone').classList.remove('hidden');document.getElementById('preview-img').classList.add('hidden');document.getElementById('res-content').classList.add('hidden');document.getElementById('res-empty').classList.remove('hidden');}
-        function simulateAnalysis(img){const d=[{title:"Erken Yanıklık",score:96,desc:"Lekelenme",action:"İlaçla"},{title:"Sağlıklı",score:99,desc:"Temiz",action:"Devam"}];const r=d[Math.floor(Math.random()*d.length)];showResult({...r,img},img);}
-        function showResult(data,img){document.getElementById('scanner-overlay').classList.add('hidden');document.getElementById('res-content').classList.remove('hidden');currentAnalysis={...data,img:img};document.getElementById('res-title').innerText=data.title;document.getElementById('res-score').innerText="%"+data.score;document.getElementById('res-desc').innerText=data.desc;document.getElementById('res-action').innerText=data.action;let h=JSON.parse(localStorage.getItem('analysisHistory')||'[]');h.unshift({id:'#'+Math.floor(Math.random()*1000),date:new Date().toLocaleDateString(),...currentAnalysis});localStorage.setItem('analysisHistory',JSON.stringify(h));updateHistoryTable();}
-        function saveResult(){if(!currentAnalysis)return;const{jsPDF}=window.jspdf;const d=new jsPDF();d.text("Rapor",20,20);d.text(currentAnalysis.title,20,30);d.addImage(currentAnalysis.img,"JPEG",20,40,100,100);d.save("analiz.pdf");alert("Kaydedildi");}
-        function updateHistoryTable(){const h=JSON.parse(localStorage.getItem('analysisHistory')||'[]');const b=document.getElementById('history-table-body');if(h.length>0)b.innerHTML=h.map(i=>`<tr><td class="p-2">${i.date}</td><td class="p-2">${i.title}</td><td class="p-2">%${i.score}</td></tr>`).join('');}
-        function clearHistory(){localStorage.removeItem('analysisHistory');updateHistoryTable();}
-        function loadAdminUsers(){const l=document.getElementById('admin-user-list');l.innerHTML=getUsers().map((u,i)=>`<tr><td class="p-2">${u.name}</td><td class="p-2">${u.email}</td><td class="p-2">${u.role}</td><td class="p-2"><button onclick="deleteUser(${i})" class="text-red-500">Sil</button></td></tr>`).join('');}
-        function deleteUser(i){if(confirm('Sil?')) { const u=getUsers(); u.splice(i,1); saveUsers(u); loadAdminUsers(); }}
-        function toggleTheme(){document.documentElement.classList.toggle('dark');localStorage.setItem('appTheme',document.documentElement.classList.contains('dark')?'dark':'light');}
-        function toggleNotifications(){document.getElementById('notification-panel').classList.toggle('hidden');}
-        function setTheme(t){document.documentElement.setAttribute('data-theme',t);localStorage.setItem('appTheme',t);if(t==='cyberpunk')document.documentElement.classList.add('dark');}
-        function handleAvatarChange(e){if(e.target.files[0]){const r=new FileReader();r.onload=ev=>{currentUser.avatar=ev.target.result;localStorage.setItem('currentUser',JSON.stringify(currentUser));checkAuth();};r.readAsDataURL(e.target.files[0]);}}
-        function saveProfileSettings(e){e.preventDefault();const n=document.getElementById('settings-name').value;if(n){currentUser.name=n;localStorage.setItem('currentUser',JSON.stringify(currentUser));saveUsers(getUsers().map(u=>u.email===currentUser.email?{...u,name:n}:u));checkAuth();alert("Kaydedildi");}}
-        function updateMyPlantsGrid() { const p=JSON.parse(localStorage.getItem('plants')||'[]'); document.getElementById('my-plants-grid').innerHTML=p.map((x,i)=>`<div class="bento-card p-4"><img src="${x.img}" class="w-full h-32 object-cover rounded"><p class="mt-2 font-bold dark:text-white">${x.name}</p><button onclick="delPlant(${i})" class="text-red-500 text-xs">Sil</button></div>`).join(''); if(p.length) document.getElementById('my-plants-empty').classList.add('hidden'); }
-        function delPlant(i){let p=JSON.parse(localStorage.getItem('plants'));p.splice(i,1);localStorage.setItem('plants',JSON.stringify(p));loadPlants();}
-
-        document.addEventListener("DOMContentLoaded",()=>{const ctx=document.getElementById('miniChart').getContext('2d');new Chart(ctx,{type:'line',data:{labels:['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'],datasets:[{data:[12,19,15,25,22,30,42],borderColor:'#10b981',tension:0.4,fill:false}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{display:false},y:{display:false}}}});});
-        if(localStorage.getItem('appTheme')==='dark') document.documentElement.classList.add('dark');
-        if(localStorage.getItem('appTheme')) setTheme(localStorage.getItem('appTheme'));
-    </script>
-</body>
-</html>
+  );
+}
