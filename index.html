@@ -1,929 +1,689 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YZDBHTKS - Geleceğin Bitki Sağlığı Sistemi</title>
-    
-    <!-- Favicon -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌿</text></svg>">
+import React, { useState } from 'react';
+import { 
+  Shield, 
+  Leaf, 
+  Lock, 
+  Unlock, 
+  User, 
+  Eye, 
+  DollarSign, 
+  Activity, 
+  Cpu, 
+  Camera, 
+  Upload, 
+  MessageSquare, 
+  CheckCircle, 
+  AlertTriangle,
+  LogOut,
+  Zap,
+  PlayCircle,
+  Users,
+  Info,
+  X
+} from 'lucide-react';
 
-    <!-- Tailwind CSS (CDN) -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- React & ReactDOM (CDN) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" crossorigin="anonymous"></script>
-    
-    <!-- Babel (CDN) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js" crossorigin="anonymous"></script>
+// --- MOCK VERİLER ---
 
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+const TEAM_MEMBERS = {
+  students: [
+    "Ayberk ARICI",
+    "Ahmet Akif ABUŞ",
+    "Selim ERDEM",
+    "Ahmet Ensar ALMAK"
+  ],
+  managers: [
+    "Semra CANPOLAT",
+    "Ahmet Esat KALKAN"
+  ]
+};
 
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .animate-fadeIn { animation: fadeIn 0.5s ease-out; }
+const MOCK_USERS = [
+  { id: 1, name: "Ahmet Çiftçi", plan: "Beleş", status: "Online", action: "Görüntü Yüklüyor..." },
+  { id: 2, name: "Ayşe Botanik", plan: "Bahçıvan Mod", status: "Online", action: "Gemini ile analiz yapıyor" },
+  { id: 3, name: "Mehmet Tarım", plan: "Uygun Mod", status: "Offline", action: "Son görülme: 5dk önce" },
+  { id: 4, name: "Sera A.Ş.", plan: "Bahçıvan Mod", status: "Online", action: "YZDBHTKS Analizi: Pas" },
+  { id: 5, name: "Ziyaretçi", plan: "Demo Hesap", status: "Online", action: "Sistemi İnceliyor" },
+];
 
-        /* Yükleme Ekranı Stili */
-        #loading-screen {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: #f3f4f6;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            transition: opacity 0.5s ease;
-        }
-        .spinner {
-            border: 4px solid rgba(16, 185, 129, 0.1);
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border-left-color: #10b981;
-            animation: spin 1s linear infinite;
-            margin-bottom: 15px;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    </style>
-    
-    <script>
-      tailwind.config = {
-        safelist: [
-          { pattern: /text-(emerald|blue|violet|orange|rose)-(400|500|600)/ },
-          { pattern: /bg-(emerald|blue|violet|orange|rose)-(10|100|500|600)/ },
-          { pattern: /border-(emerald|blue|violet|orange|rose)-(500)/ },
-          { pattern: /ring-(emerald|blue|violet|orange|rose)-(500)/ },
-          { pattern: /shadow-(emerald|blue|violet|orange|rose)-(500)\/30/ },
-        ],
-        darkMode: 'class',
+const DISEASE_CLASSES = [
+  { name: "Külleme (Powdery Mildew)", severity: "Orta", treatment: "Kükürtlü ilaçlar ve havalandırma artırılmalı." },
+  { name: "Yaprak Lekesi (Leaf Spot)", severity: "Düşük", treatment: "Etkilenen yaprakları budayın ve nemi azaltın." },
+  { name: "Pas (Rust)", severity: "Yüksek", treatment: "Mantar ilacı (fungisit) uygulanmalı, sulama kökten yapılmalı." },
+  { name: "Sağlıklı (Healthy)", severity: "Yok", treatment: "Bitkiniz gayet sağlıklı görünüyor. Bakıma devam!" }
+];
+
+export default function App() {
+  const [view, setView] = useState('login'); // login, admin, user
+  const [userRole, setUserRole] = useState(null);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [showTeamModal, setShowTeamModal] = useState(false);
+
+  // User State
+  const [subscription, setSubscription] = useState('Beleş'); 
+  const [selectedAI, setSelectedAI] = useState(null); // 'GPT', 'Gemini', null (default model only)
+  const [scannedImage, setScannedImage] = useState(null);
+  const [analysisResult, setAnalysisResult] = useState(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  // Admin State
+  const [totalIncome, setTotalIncome] = useState(12500);
+
+  // --- GİRİŞ SİSTEMİ ---
+  const handleLogin = (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setLoginError('');
+
+    setTimeout(() => {
+      if (email === 'yzdbhtks@proton.me' && password === '2026_yzdbhtks_buyuyor') {
+        setUserRole('admin');
+        setView('admin');
+      } 
+      else if (email && password) {
+        setUserRole('user');
+        setView('user');
+        setSubscription('Beleş');
+      } else {
+        setLoginError('Eksik veya hatalı bilgiler.');
       }
-    </script>
-</head>
-<body class="bg-gray-100 text-gray-900 transition-colors duration-300">
+      setLoading(false);
+    }, 1000);
+  };
+
+  const handleDemoLogin = () => {
+    setLoading(true);
+    setTimeout(() => {
+      setUserRole('user');
+      setView('user');
+      setSubscription('Demo Hesap');
+      setEmail('ziyaretci@demo.com');
+      setLoading(false);
+    }, 800);
+  };
+
+  const handleLogout = () => {
+    setView('login');
+    setUserRole(null);
+    setEmail('');
+    setPassword('');
+    setScannedImage(null);
+    setAnalysisResult(null);
+    setSelectedAI(null);
+  };
+
+  // --- MODEL SİMÜLASYONU ---
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setScannedImage(reader.result);
+        setAnalysisResult(null);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const runAnalysis = () => {
+    if (!scannedImage) return;
+    setIsAnalyzing(true);
     
-    <!-- Yükleme Ekranı -->
-    <div id="loading-screen">
-        <div class="spinner"></div>
-        <h2 style="color: #374151; font-weight: 600;">YZDBHTKS Başlatılıyor...</h2>
+    setTimeout(() => {
+      const randomResult = DISEASE_CLASSES[Math.floor(Math.random() * DISEASE_CLASSES.length)];
+      const confidence = (Math.random() * (99 - 85) + 85).toFixed(2);
+      
+      setAnalysisResult({
+        ...randomResult,
+        confidence: confidence,
+        aiUsed: 'YZDBHTKS v5.0 (.h5 Model)'
+      });
+      setIsAnalyzing(false);
+    }, 2500);
+  };
+
+  // --- MODAL BİLEŞENİ (PROJE EKİBİ) ---
+  const TeamModal = () => (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden">
+        <div className="bg-emerald-600 p-6 flex justify-between items-center text-white">
+          <div className="flex items-center gap-2">
+            <Users className="w-6 h-6" />
+            <h2 className="text-xl font-bold">Proje Ekibi</h2>
+          </div>
+          <button onClick={() => setShowTeamModal(false)} className="hover:bg-emerald-700 p-1 rounded-full transition-colors">
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+        <div className="p-6 space-y-6">
+          <div>
+            <h3 className="text-emerald-800 font-bold text-sm uppercase tracking-wider mb-3 border-b border-emerald-100 pb-1">Proje Yöneticileri & Bilişim Öğretmenleri</h3>
+            <div className="grid grid-cols-1 gap-2">
+              {TEAM_MEMBERS.managers.map((name, idx) => (
+                <div key={idx} className="flex items-center gap-3 bg-emerald-50 p-3 rounded-lg border border-emerald-100">
+                  <div className="w-8 h-8 rounded-full bg-emerald-200 flex items-center justify-center text-emerald-800 font-bold text-xs">
+                    {name.split(' ')[0][0]}{name.split(' ')[1][0]}
+                  </div>
+                  <span className="font-medium text-emerald-900">{name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          <div>
+            <h3 className="text-emerald-800 font-bold text-sm uppercase tracking-wider mb-3 border-b border-emerald-100 pb-1">Geliştirici Ekip (Öğrenciler)</h3>
+            <div className="grid grid-cols-2 gap-3">
+              {TEAM_MEMBERS.students.map((name, idx) => (
+                <div key={idx} className="flex items-center gap-2 text-slate-700 text-sm p-2 hover:bg-slate-50 rounded transition-colors">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                  {name}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-slate-50 p-4 rounded-lg text-xs text-slate-500 text-center">
+            Bu proje TÜBİTAK bilim fuarları kapsamında geliştirilmiştir.<br/>© 2026 YZDBHTKS
+          </div>
+        </div>
+      </div>
     </div>
+  );
 
-    <div id="root"></div>
-
-    <script type="text/babel">
-        // --- React Uygulaması Başlangıcı ---
-        const { useState, useEffect } = React;
-
-        // --- ICONS (Düzeltildi: Tüm ikonlar <g> etiketi ile gruplandı) ---
-        const Icon = ({ name, size = 24, className = "" }) => {
-            const icons = {
-                Leaf: <g><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></g>,
-                ShieldCheck: <g><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></g>,
-                Users: <g><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></g>,
-                Settings: <g><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.47a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></g>,
-                LogOut: <g><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></g>,
-                Upload: <g><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></g>,
-                FileText: <g><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><polyline points="10 9 9 9 8 9"/></g>,
-                Download: <g><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></g>,
-                Cpu: <g><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" x2="9" y1="1" y2="4"/><line x1="15" x2="15" y1="1" y2="4"/><line x1="9" x2="9" y1="20" y2="23"/><line x1="15" x2="15" y1="20" y2="23"/><line x1="20" x2="23" y1="9" y2="9"/><line x1="20" x2="23" y1="14" y2="14"/><line x1="1" x2="4" y1="9" y2="9"/><line x1="1" x2="4" y1="14" y2="14"/></g>,
-                CreditCard: <g><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></g>,
-                CheckCircle: <g><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></g>,
-                AlertTriangle: <g><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></g>,
-                Moon: <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>,
-                Sun: <g><circle cx="12" cy="12" r="5"/><line x1="12" x2="12" y1="1" y2="3"/><line x1="12" x2="12" y1="21" y2="23"/><line x1="4.22" x2="5.64" y1="4.22" y2="5.64"/><line x1="18.36" x2="19.78" y1="18.36" y2="19.78"/><line x1="1" x2="3" y1="12" y2="12"/><line x1="21" x2="23" y1="12" y2="12"/><line x1="4.22" x2="5.64" y1="19.78" y2="18.36"/><line x1="18.36" x2="19.78" y1="5.64" y2="4.22"/></g>,
-                Menu: <g><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></g>,
-                X: <g><path d="M18 6 6 18"/><path d="m6 6 12 12"/></g>,
-                Lock: <g><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></g>,
-                Mail: <g><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></g>,
-                UserPlus: <g><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" x2="20" y1="8" y2="14"/><line x1="23" x2="17" y1="11" y2="11"/></g>,
-                ArrowRight: <g><line x1="5" x2="19" y1="12" y2="12"/><polyline points="12 5 19 12 12 19"/></g>,
-                Clock: <g><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></g>,
-                Trash2: <g><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></g>,
-                Edit: <g><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></g>,
-                Save: <g><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></g>,
-                Palette: <g><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></g>
-            };
-            
-            return (
-                <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    width={size} 
-                    height={size} 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    strokeWidth="2" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    className={className}
-                >
-                    {icons[name] || <circle cx="12" cy="12" r="10"/>}
-                </svg>
-            );
-        };
-
-        const TEAM_MEMBERS = [
-          { name: "Ayberk ARICI", role: "Proje Yöneticisi", color: "bg-blue-500" },
-          { name: "Ahmet Akif ABUŞ", role: "Kod Geliştiricisi (Backend/Frontend)", color: "bg-purple-500" },
-          { name: "Selim ERDEM", role: "Backend Geliştirici", color: "bg-indigo-500" },
-          { name: "Ahmet Ensar ALMAK", role: "Frontend, Yapay Zeka Analizci", color: "bg-pink-500" },
-          { name: "Semra CANPOLAT", role: "Bilişim Öğretmeni (Danışman)", color: "bg-emerald-600" },
-          { name: "Ahmet Esat KALKAN", role: "Bilişim Öğretmeni (Danışman)", color: "bg-emerald-600" }
-        ];
-
-        const SUBSCRIPTION_PLANS = [
-          { 
-            id: 'normal', 
-            name: 'Normal Mod', 
-            price: 0, 
-            features: ['Temel YZDBHTKS Analizi', 'PDF Raporlama', 'Reklamlı Arayüz'],
-            modelAccess: ['basic']
-          },
-          { 
-            id: 'bitkiseven', 
-            name: 'Bitkiseven Mod', 
-            price: 100, 
-            features: ['Hızlandırılmış Analiz', 'JSON/CSV Dışa Aktarım', 'Reklamsız', 'Geçmiş Kayıtları'],
-            modelAccess: ['basic', 'fast']
-          },
-          { 
-            id: 'bahcivan', 
-            name: 'Bahçıvan Mod', 
-            price: 250, 
-            features: ['Gemini Pro (Bahçıvan)', 'Detaylı Tedavi Önerileri', '7/24 Destek', 'Tam Erişim'],
-            modelAccess: ['basic', 'fast', 'pro']
-          }
-        ];
-
-        const DISEASE_CLASSES = [
-          { name: "Külleme", severity: "Orta", treatment: "Kükürtlü ilaçlar kullanılmalı ve havalandırma artırılmalı." },
-          { name: "Leke", severity: "Düşük", treatment: "Lekeli yapraklar temizlenmeli, aşırı sulamadan kaçınılmalı." },
-          { name: "Pas", severity: "Yüksek", treatment: "Mantar ilacı uygulanmalı, bitki izole edilmeli." },
-          { name: "Sağlıklı", severity: "Yok", treatment: "Bitkiniz gayet sağlıklı görünüyor. Düzenli bakıma devam edin." }
-        ];
-
-        const THEME_STYLES = {
-          emerald: { name: 'Doğa Yeşili', hex: '#10b981', text: 'text-emerald-500', bg: 'bg-emerald-600', bgHover: 'hover:bg-emerald-500', bgLight: 'bg-emerald-500/10', border: 'border-emerald-500', ring: 'focus:ring-emerald-500', shadow: 'shadow-emerald-500/30' },
-          blue: { name: 'Okyanus Mavisi', hex: '#3b82f6', text: 'text-blue-500', bg: 'bg-blue-600', bgHover: 'hover:bg-blue-500', bgLight: 'bg-blue-500/10', border: 'border-blue-500', ring: 'focus:ring-blue-500', shadow: 'shadow-blue-500/30' },
-          violet: { name: 'Lavanta Moru', hex: '#8b5cf6', text: 'text-violet-500', bg: 'bg-violet-600', bgHover: 'hover:bg-violet-500', bgLight: 'bg-violet-500/10', border: 'border-violet-500', ring: 'focus:ring-violet-500', shadow: 'shadow-violet-500/30' },
-          orange: { name: 'Gün Batımı', hex: '#f97316', text: 'text-orange-500', bg: 'bg-orange-600', bgHover: 'hover:bg-orange-500', bgLight: 'bg-orange-500/10', border: 'border-orange-500', ring: 'focus:ring-orange-500', shadow: 'shadow-orange-500/30' },
-          rose: { name: 'Gül Kırmızısı', hex: '#f43f5e', text: 'text-rose-500', bg: 'bg-rose-600', bgHover: 'hover:bg-rose-500', bgLight: 'bg-rose-500/10', border: 'border-rose-500', ring: 'focus:ring-rose-500', shadow: 'shadow-rose-500/30' }
-        };
-
-        const MOCK_USERS = [
-          { id: 1, name: "Ahmet Yılmaz", email: "ahmet@ornek.com", role: "user", plan: "normal" },
-          { id: 2, name: "Zeynep Demir", email: "zeynep@ornek.com", role: "user", plan: "bitkiseven" },
-          { id: 3, name: "Mehmet Kaya", email: "mehmet@ornek.com", role: "user", plan: "bahcivan" },
-          { id: 4, name: "Demo Kullanıcı", email: "demo@yzdbhtks.com", role: "user", plan: "normal" },
-        ];
-
-        function App() {
-          const [user, setUser] = useState(null);
-          const [authStep, setAuthStep] = useState('login');
-          const [authMode, setAuthMode] = useState('login');
+  // --- LOGIN EKRANI ---
+  if (view === 'login') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-emerald-900 via-teal-900 to-slate-900 flex items-center justify-center p-4 font-sans">
+        {showTeamModal && <TeamModal />}
+        
+        <div className="max-w-md w-full bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl overflow-hidden border border-white/20">
+          <div className="p-8 text-center relative">
+            <div className="mx-auto bg-emerald-500/20 w-20 h-20 rounded-full flex items-center justify-center mb-4 border border-emerald-400/30 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+              <Leaf className="w-10 h-10 text-emerald-300" />
+            </div>
+            <h1 className="text-3xl font-bold text-white mb-1 tracking-tight">YZDBHTKS</h1>
+            <p className="text-emerald-200/80 text-sm">Akıllı Flora Bitki Koruma Sistemi v5.0</p>
+          </div>
           
-          const [emailInput, setEmailInput] = useState('');
-          const [passInput, setPassInput] = useState('');
-          const [nameInput, setNameInput] = useState(''); 
-          
-          const [verificationCode, setVerificationCode] = useState('');
-          const [enteredCode, setEnteredCode] = useState('');
-          const [generatedCode, setGeneratedCode] = useState(null);
-          
-          const [currentView, setCurrentView] = useState('dashboard');
-          const [darkMode, setDarkMode] = useState(true);
-          const [sidebarOpen, setSidebarOpen] = useState(true);
-          const [themeColor, setThemeColor] = useState('emerald');
-          const [analysisHistory, setAnalysisHistory] = useState([]);
-          
-          const [usersList, setUsersList] = useState(MOCK_USERS);
-          const [selectedImage, setSelectedImage] = useState(null);
-          const [analyzing, setAnalyzing] = useState(false);
-          const [analysisResult, setAnalysisResult] = useState(null);
-          const [selectedModel, setSelectedModel] = useState('yzdbhtks');
-
-          // Dark Mode Handling
-          useEffect(() => {
-            if (darkMode) {
-              document.body.classList.add('dark', 'bg-slate-900', 'text-white');
-              document.body.classList.remove('bg-gray-100', 'text-gray-900');
-            } else {
-              document.body.classList.remove('dark', 'bg-slate-900', 'text-white');
-              document.body.classList.add('bg-gray-100', 'text-gray-900');
-            }
-          }, [darkMode]);
-
-          const theme = THEME_STYLES[themeColor];
-
-          // Auth
-          const handleAuthSubmit = (e) => {
-            e.preventDefault();
-            if (authMode === 'login') {
-              if (emailInput === 'yzdbhtks@proton.me' && passInput === '2026_yzdbhtks_buyuyor') {
-                completeLogin({ email: emailInput, role: 'admin', plan: 'bahcivan', name: 'Admin' });
-              } else if (emailInput && passInput) {
-                sendVerificationCode();
-              } else {
-                alert("Lütfen e-posta ve şifrenizi girin.");
-              }
-            } else {
-              if (emailInput && passInput && nameInput) {
-                sendVerificationCode();
-              } else {
-                alert("Lütfen tüm alanları doldurun.");
-              }
-            }
-          };
-
-          const sendVerificationCode = () => {
-            const code = '1234'; 
-            setGeneratedCode(code);
-            setAuthStep('verify');
-            setTimeout(() => alert(`SİMÜLASYON: ${emailInput} adresine gönderilen kod: ${code}`), 500);
-          };
-
-          const handleVerify = (e) => {
-            e.preventDefault();
-            if (enteredCode === generatedCode || enteredCode === '000000' || enteredCode === '1234') {
-              completeLogin({ email: emailInput, role: 'user', plan: 'normal', name: nameInput || emailInput.split('@')[0] });
-            } else {
-              alert("Hatalı doğrulama kodu!");
-            }
-          };
-
-          const handleDemoLogin = () => {
-            completeLogin({ email: 'demo@yzdbhtks.com', role: 'user', plan: 'normal', name: 'Demo Kullanıcı' });
-          };
-
-          const completeLogin = (userData) => {
-            setUser(userData);
-            setAuthStep('app');
-            setEmailInput('');
-            setPassInput('');
-            setNameInput('');
-            setEnteredCode('');
-          };
-
-          const handleLogout = () => {
-            setUser(null);
-            setAuthStep('login');
-            setAuthMode('login');
-            setAnalysisResult(null);
-            setSelectedImage(null);
-          };
-
-          // Analysis
-          const handleImageUpload = (e) => {
-            const file = e.target.files[0];
-            if (file) {
-              const reader = new FileReader();
-              reader.onloadend = () => {
-                setSelectedImage(reader.result);
-                setAnalysisResult(null);
-              };
-              reader.readAsDataURL(file);
-            }
-          };
-
-          const runAnalysis = () => {
-            if (!selectedImage) return;
-
-            if (selectedModel === 'gemini_pro' && user.plan !== 'bahcivan') {
-              alert("Bu model için 'Bahçıvan' paketine yükseltmelisiniz!");
-              return;
-            }
-
-            setAnalyzing(true);
-            
-            setTimeout(() => {
-              const randomDisease = DISEASE_CLASSES[Math.floor(Math.random() * DISEASE_CLASSES.length)];
-              const confidence = (Math.random() * (99 - 75) + 75).toFixed(2);
+          <div className="px-8 pb-8 space-y-5">
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-1">
+                <div className="relative group">
+                  <User className="absolute left-3 top-3.5 w-5 h-5 text-emerald-200/50 group-focus-within:text-emerald-300 transition-colors" />
+                  <input 
+                    type="email" 
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-black/20 border border-emerald-500/30 rounded-xl py-3 pl-10 px-4 text-white placeholder:text-emerald-200/30 focus:outline-none focus:border-emerald-400 focus:bg-black/30 transition-all"
+                    placeholder="E-Posta Adresi"
+                  />
+                </div>
+              </div>
               
-              let aiResponse = "";
-              if (selectedModel === 'gemini_pro') {
-                aiResponse = `[GEMINI PRO BAHÇIVAN MODU]\nAnaliz: ${randomDisease.name} tespit edildi.\n\nDetaylı Rapor: Bitkinin yaprak dokusunda ${randomDisease.name.toLowerCase()} belirtileri gözlemlendi. Klorofil kaybı %15 seviyesinde. \n\nÖzel Tavsiye: Toprak pH değerini kontrol edin ve 3 gün arayla su püskürtün.`;
-              } else {
-                aiResponse = `[YZDBHTKS v3.0]\nTespit: ${randomDisease.name}\nGüven Oranı: %${confidence}\nDurum: ${randomDisease.treatment}`;
-              }
+              <div className="space-y-1">
+                <div className="relative group">
+                  <Lock className="absolute left-3 top-3.5 w-5 h-5 text-emerald-200/50 group-focus-within:text-emerald-300 transition-colors" />
+                  <input 
+                    type="password" 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-black/20 border border-emerald-500/30 rounded-xl py-3 pl-10 px-4 text-white placeholder:text-emerald-200/30 focus:outline-none focus:border-emerald-400 focus:bg-black/30 transition-all"
+                    placeholder="Şifre"
+                  />
+                </div>
+              </div>
 
-              const result = {
-                id: Date.now(),
-                disease: randomDisease.name,
-                confidence: confidence,
-                details: aiResponse,
-                severity: randomDisease.severity,
-                timestamp: new Date().toLocaleString(),
-                image: selectedImage
-              };
+              {loginError && (
+                <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-3 flex items-center gap-2 text-red-200 text-sm backdrop-blur-sm">
+                  <AlertTriangle className="w-4 h-4" />
+                  {loginError}
+                </div>
+              )}
 
-              setAnalysisResult(result);
-              setAnalysisHistory(prev => [result, ...prev]);
-              setAnalyzing(false);
-            }, 2500);
-          };
+              <button 
+                type="submit" 
+                disabled={loading}
+                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-emerald-900/40 transition-all flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
+              >
+                {loading && email !== 'ziyaretci@demo.com' ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Unlock className="w-5 h-5" />}
+                Giriş Yap
+              </button>
+            </form>
 
-          const downloadJSON = (data) => {
-            data = data || analysisResult;
-            if (!data) return;
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
-            const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", "analiz_sonucu.json");
-            document.body.appendChild(downloadAnchorNode);
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
-          };
+            <div className="flex flex-col gap-3 pt-2">
+              <button 
+                onClick={handleDemoLogin}
+                disabled={loading}
+                className="w-full bg-white/5 hover:bg-white/10 text-emerald-100 font-medium py-3 rounded-xl border border-white/10 transition-all flex items-center justify-center gap-2 group"
+              >
+                {loading && email === 'ziyaretci@demo.com' ? (
+                  <div className="w-5 h-5 border-2 border-emerald-200/30 border-t-emerald-200 rounded-full animate-spin" /> 
+                ) : (
+                  <PlayCircle className="w-5 h-5 group-hover:text-white" />
+                )}
+                Demo Modu Başlat
+              </button>
 
-          const downloadCSV = (data) => {
-            data = data || analysisResult;
-            if (!data) return;
-            const csvContent = "data:text/csv;charset=utf-8," 
-              + "Hastalık,Güven,Şiddet,Tarih,Detay\n"
-              + `${data.disease},${data.confidence},${data.severity},${data.timestamp},"${data.details.replace(/\n/g, ' ')}"`;
+              <button 
+                onClick={() => setShowTeamModal(true)}
+                className="text-xs text-emerald-300/60 hover:text-emerald-200 transition-colors flex items-center justify-center gap-1 py-2"
+              >
+                <Info className="w-3 h-3" />
+                Proje Ekibi & Emeği Geçenler
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // --- ADMIN PANELİ (KOYU TEMA DEVAM) ---
+  if (view === 'admin') {
+    return (
+      <div className="min-h-screen bg-gray-950 text-white font-sans">
+        <header className="bg-gray-900 border-b border-gray-800 px-6 py-4 flex justify-between items-center sticky top-0 z-50">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-red-600/90 rounded-lg shadow-lg shadow-red-900/20">
+              <Shield className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold tracking-tight text-gray-100">Yönetim Paneli</h1>
+              <span className="text-xs text-red-400 font-mono flex items-center gap-1">
+                <Activity className="w-3 h-3" /> CANLI İZLEME
+              </span>
+            </div>
+          </div>
+          <button onClick={handleLogout} className="p-2 hover:bg-gray-800 rounded-lg text-gray-400 hover:text-white transition-colors">
+            <LogOut className="w-5 h-5" />
+          </button>
+        </header>
+
+        <main className="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+          {/* İstatistikler */}
+          <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-gray-900 p-6 rounded-2xl border border-gray-800">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <p className="text-gray-400 text-sm">Toplam Gelir</p>
+                  <h3 className="text-3xl font-bold text-emerald-400">{totalIncome.toLocaleString('tr-TR')} ₺</h3>
+                </div>
+                <DollarSign className="w-8 h-8 text-emerald-500/20" />
+              </div>
+              <div className="w-full bg-gray-800 h-2 rounded-full overflow-hidden">
+                <div className="bg-emerald-500 h-full w-[75%]"></div>
+              </div>
+            </div>
+
+            <div className="bg-gray-900 p-6 rounded-2xl border border-gray-800">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <p className="text-gray-400 text-sm">Aktif Kullanıcı</p>
+                  <h3 className="text-3xl font-bold text-blue-400">142</h3>
+                </div>
+                <Users className="w-8 h-8 text-blue-500/20" />
+              </div>
+            </div>
+
+            <div className="bg-gray-900 p-6 rounded-2xl border border-gray-800">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <p className="text-gray-400 text-sm">Sunucu Yükü</p>
+                  <h3 className="text-3xl font-bold text-purple-400">%42</h3>
+                </div>
+                <Cpu className="w-8 h-8 text-purple-500/20" />
+              </div>
+            </div>
+          </div>
+
+          {/* Tablo */}
+          <div className="lg:col-span-2 bg-gray-900 rounded-2xl border border-gray-800 overflow-hidden">
+            <div className="p-5 border-b border-gray-800 flex justify-between items-center">
+              <h3 className="font-semibold text-gray-200">Kullanıcı Aktiviteleri</h3>
+              <div className="flex items-center gap-2 px-3 py-1 bg-yellow-500/10 border border-yellow-500/20 rounded-full">
+                <Eye className="w-3 h-3 text-yellow-500" />
+                <span className="text-xs text-yellow-500">Gözetleme Modu</span>
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="text-xs text-gray-500 uppercase bg-gray-950">
+                  <tr>
+                    <th className="px-6 py-4">Kullanıcı</th>
+                    <th className="px-6 py-4">Paket</th>
+                    <th className="px-6 py-4">İşlem</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-800">
+                  {MOCK_USERS.map((user) => (
+                    <tr key={user.id} className="hover:bg-gray-800/50">
+                      <td className="px-6 py-4 font-medium text-gray-300">{user.name}</td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2 py-1 rounded text-xs border ${
+                          user.plan === 'Bahçıvan Mod' ? 'bg-purple-500/10 border-purple-500/30 text-purple-400' :
+                          user.plan === 'Uygun Mod' ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' :
+                          'bg-gray-700/30 border-gray-600 text-gray-400'
+                        }`}>
+                          {user.plan}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-gray-400 text-xs font-mono">{user.action}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          {/* Log */}
+          <div className="bg-gray-900 rounded-2xl border border-gray-800 p-6">
+            <h3 className="font-semibold text-gray-200 mb-4">Sistem Logları</h3>
+            <div className="space-y-4">
+              <div className="flex gap-3">
+                <div className="w-1 bg-red-500 rounded-full"></div>
+                <div>
+                  <p className="text-sm text-gray-300">Hatalı Giriş (Admin)</p>
+                  <p className="text-xs text-gray-600">IP: 192.168.1.102</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <div className="w-1 bg-emerald-500 rounded-full"></div>
+                <div>
+                  <p className="text-sm text-gray-300">Yeni Satış: Bahçıvan Mod</p>
+                  <p className="text-xs text-gray-600">+500 TL (Kredi Kartı)</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // --- KULLANICI ARAYÜZÜ (YENİ TEMA) ---
+  return (
+    <div className="min-h-screen bg-[#F0FDF4] flex flex-col font-sans text-slate-800">
+      {showTeamModal && <TeamModal />}
+
+      {/* Navbar */}
+      <nav className="bg-white shadow-sm border-b border-emerald-100 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex items-center gap-2">
+              <div className="bg-emerald-100 p-2 rounded-lg">
+                <Leaf className="w-6 h-6 text-emerald-600" />
+              </div>
+              <div>
+                <span className="font-bold text-xl text-emerald-950 tracking-tight">YZDBHTKS</span>
+                <span className="text-[10px] block text-emerald-600/80 -mt-1 font-medium">Akıllı Flora v5.0</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <button onClick={() => setShowTeamModal(true)} className="hidden md:flex items-center gap-1 text-sm text-slate-500 hover:text-emerald-600 transition-colors mr-2">
+                <Users className="w-4 h-4" /> Ekip
+              </button>
+              
+              <div className="hidden md:flex flex-col items-end border-r border-slate-100 pr-4 mr-2">
+                <span className="text-sm font-bold text-slate-700">
+                   {subscription === 'Demo Hesap' ? 'Ziyaretçi' : 'Kullanıcı'}
+                </span>
+                <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                  subscription === 'Bahçıvan Mod' ? 'bg-purple-100 text-purple-700' :
+                  subscription === 'Uygun Mod' ? 'bg-blue-100 text-blue-700' :
+                  subscription === 'Demo Hesap' ? 'bg-orange-100 text-orange-700' :
+                  'bg-slate-100 text-slate-600'
+                }`}>
+                  {subscription}
+                </span>
+              </div>
+              <button onClick={handleLogout} className="p-2 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-full transition-colors">
+                <LogOut className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        {/* SOL PANEL */}
+        <div className="lg:col-span-8 space-y-6">
+          
+          {/* Tarama Alanı */}
+          <div className="bg-white rounded-3xl shadow-sm border border-emerald-100 overflow-hidden">
+            <div className="p-6 border-b border-slate-50 flex justify-between items-center bg-emerald-50/50">
+              <h2 className="text-lg font-bold text-emerald-900 flex items-center gap-2">
+                <Camera className="w-5 h-5 text-emerald-600" />
+                Bitki Tarayıcı
+              </h2>
+              <div className="flex gap-1">
+                {['Külleme', 'Leke', 'Pas', 'Sağlıklı'].map(tag => (
+                  <span key={tag} className="px-2 py-1 bg-white border border-emerald-100 text-emerald-600 text-[10px] font-medium rounded-full shadow-sm">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
             
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "analiz_sonucu.csv");
-            document.body.appendChild(link);
-            link.click();
-          };
-
-          const downloadPDF = () => {
-            window.print();
-          };
-
-          const deleteUser = (userId) => {
-            if(confirm('Bu kullanıcıyı silmek istediğinize emin misiniz?')) {
-              setUsersList(usersList.filter(u => u.id !== userId));
-            }
-          };
-
-          const changeUserPlan = (userId, newPlan) => {
-            setUsersList(usersList.map(u => u.id === userId ? {...u, plan: newPlan} : u));
-          };
-
-          // Yükleme ekranını kaldırma efekti
-          useEffect(() => {
-            const loader = document.getElementById('loading-screen');
-            if (loader) {
-                setTimeout(() => {
-                    loader.style.opacity = '0';
-                    setTimeout(() => loader.style.display = 'none', 500);
-                }, 1000);
-            }
-          }, []);
-
-          if (!user) {
-            return (
-              <div className={`min-h-screen flex items-center justify-center p-4 transition-colors duration-500`}>
-                <div className={`max-w-md w-full rounded-2xl shadow-2xl overflow-hidden ${darkMode ? 'bg-slate-800' : 'bg-white'}`}>
-                  <div className="p-8">
-                    <div className="text-center mb-6">
-                      <div className="flex justify-center mb-4">
-                         <div className={`w-20 h-20 rounded-full flex items-center justify-center shadow-lg bg-emerald-500 shadow-emerald-500/50`}>
-                           <Icon name="Leaf" size={40} className="text-white" />
-                         </div>
+            <div className="p-6">
+              {!scannedImage ? (
+                <div className="group border-2 border-dashed border-emerald-200 rounded-2xl p-12 text-center hover:bg-emerald-50/50 transition-colors cursor-pointer relative">
+                  <input type="file" accept="image/*" onChange={handleImageUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+                  <div className="bg-emerald-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                    <Upload className="w-8 h-8 text-emerald-600" />
+                  </div>
+                  <p className="text-slate-900 font-semibold text-lg">Fotoğraf Yükle</p>
+                  <p className="text-slate-500 text-sm mt-1">Sürükle bırak veya tıklayarak seç</p>
+                </div>
+              ) : (
+                <div className="flex flex-col md:flex-row gap-6">
+                  <div className="w-full md:w-1/2 relative rounded-2xl overflow-hidden bg-slate-900 shadow-lg aspect-square group">
+                    <img src={scannedImage} alt="Bitki" className="w-full h-full object-contain" />
+                    <button onClick={() => {setScannedImage(null); setAnalysisResult(null);}} className="absolute top-3 right-3 bg-white/90 p-2 rounded-full hover:bg-white text-slate-900 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  
+                  <div className="w-full md:w-1/2 flex flex-col justify-center">
+                    {!analysisResult ? (
+                      <div className="text-center space-y-4">
+                        <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100 text-sm text-emerald-800">
+                          <p className="font-semibold mb-1">Varsayılan Model: YZDBHTKS v5.0</p>
+                          <p className="opacity-80">Görüntü işleme ve sınıflandırma için hazır.</p>
+                        </div>
+                        <button 
+                          onClick={runAnalysis}
+                          disabled={isAnalyzing}
+                          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-emerald-200 transition-all flex items-center justify-center gap-2"
+                        >
+                          {isAnalyzing ? (
+                            <>
+                              <div className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full"></div>
+                              Analiz Ediliyor...
+                            </>
+                          ) : (
+                            <>
+                              <Zap className="w-5 h-5" />
+                              Hastalığı Tespit Et
+                            </>
+                          )}
+                        </button>
                       </div>
-                      <h1 className="text-2xl font-bold mb-1 bg-gradient-to-r from-emerald-400 to-cyan-500 bg-clip-text text-transparent">YZDBHTKS</h1>
-                      <p className="text-sm opacity-60">Geleceğin Bitki Sağlığı Sistemi</p>
-                    </div>
+                    ) : (
+                      <div className="space-y-4 animate-in slide-in-from-bottom-4 fade-in duration-500">
+                        <div className={`p-5 rounded-2xl border ${
+                          analysisResult.name.includes('Sağlıklı') 
+                            ? 'bg-green-50 border-green-200 text-green-900' 
+                            : 'bg-red-50 border-red-200 text-red-900'
+                        }`}>
+                          <p className="text-xs uppercase tracking-wider opacity-70 mb-1">Tespit Edilen Durum</p>
+                          <h3 className="text-2xl font-bold">{analysisResult.name}</h3>
+                          <div className="mt-3 flex items-center gap-3 text-sm font-medium opacity-80">
+                            <span className="flex items-center gap-1"><Activity className="w-4 h-4" /> %{analysisResult.confidence} Güven</span>
+                            <span>•</span>
+                            <span>{analysisResult.aiUsed}</span>
+                          </div>
+                        </div>
 
-                    {authStep === 'verify' ? (
-                      <form onSubmit={handleVerify} className="space-y-4 animate-fadeIn">
-                        <div className="bg-emerald-500/10 p-4 rounded-lg border border-emerald-500/30 mb-4 text-center">
-                          <p className="text-sm text-emerald-400">
-                            <span className="font-bold">{emailInput}</span> adresine bir kod gönderdik.
+                        {/* Seçilen Asistanın Yorumu */}
+                        <div className={`p-5 rounded-2xl border ${
+                          selectedAI === 'Gemini' ? 'bg-purple-50 border-purple-200' :
+                          selectedAI === 'GPT' ? 'bg-blue-50 border-blue-200' :
+                          'bg-slate-50 border-slate-200'
+                        }`}>
+                          <div className="flex items-center gap-2 mb-2 font-bold">
+                            <MessageSquare className="w-4 h-4" />
+                            <span className={selectedAI === 'Gemini' ? 'text-purple-700' : selectedAI === 'GPT' ? 'text-blue-700' : 'text-slate-700'}>
+                              {selectedAI === 'Gemini' ? 'Gemini Bahçıvan Yorumu' : selectedAI === 'GPT' ? 'GPT Asistan Yorumu' : 'Temel Öneri'}
+                            </span>
+                          </div>
+                          <p className="text-sm leading-relaxed text-slate-700">
+                            {analysisResult.treatment}
+                            {selectedAI === 'Gemini' && " Ayrıca toprağın pH değerini kontrol etmenizi ve sulamayı sabah erken saatlerde yapmanızı öneririm."}
+                            {selectedAI === 'GPT' && " Uygun fiyatlı mantar ilaçları için yerel ziraatçinizle görüşebilirsiniz."}
                           </p>
                         </div>
-                        <input 
-                          type="text" 
-                          placeholder="Doğrulama Kodu: 1234" 
-                          value={enteredCode}
-                          onChange={(e) => setEnteredCode(e.target.value)}
-                          className={`w-full text-center tracking-widest text-2xl p-3 rounded-lg border focus:ring-2 focus:ring-emerald-500 outline-none transition-all ${darkMode ? 'bg-slate-700 border-slate-600' : 'bg-gray-50 border-gray-200'}`}
-                          autoFocus
-                        />
-                        <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white p-3 rounded-lg font-semibold transition-all shadow-lg">
-                          Doğrula ve Devam Et
-                        </button>
-                        <button type="button" onClick={() => setAuthStep('login')} className="w-full text-sm text-gray-400 hover:text-white">Geri Dön</button>
-                      </form>
-                    ) : (
-                      <div className="space-y-6">
-                        <div className={`grid grid-cols-2 p-1 rounded-lg ${darkMode ? 'bg-slate-700' : 'bg-gray-100'}`}>
-                          <button onClick={() => setAuthMode('login')} className={`p-2 text-sm font-medium rounded-md transition-all ${authMode === 'login' ? 'bg-emerald-600 text-white shadow' : 'text-gray-500 hover:text-gray-300'}`}>Giriş Yap</button>
-                          <button onClick={() => setAuthMode('register')} className={`p-2 text-sm font-medium rounded-md transition-all ${authMode === 'register' ? 'bg-emerald-600 text-white shadow' : 'text-gray-500 hover:text-gray-300'}`}>Kayıt Ol</button>
-                        </div>
-
-                        <form onSubmit={handleAuthSubmit} className="space-y-4">
-                          {authMode === 'register' && (
-                            <div className="relative animate-fadeIn">
-                              <div className="absolute left-3 top-3 text-gray-400"><Icon name="Users" size={18}/></div>
-                              <input type="text" placeholder="Ad Soyad" value={nameInput} onChange={(e) => setNameInput(e.target.value)} className={`w-full pl-10 p-3 rounded-lg border focus:ring-2 focus:ring-emerald-500 outline-none transition-all ${darkMode ? 'bg-slate-700 border-slate-600' : 'bg-gray-50 border-gray-200'}`} required />
-                            </div>
-                          )}
-                          <div className="relative">
-                            <div className="absolute left-3 top-3 text-gray-400"><Icon name="Mail" size={18}/></div>
-                            <input type="email" placeholder="E-posta" value={emailInput} onChange={(e) => setEmailInput(e.target.value)} className={`w-full pl-10 p-3 rounded-lg border focus:ring-2 focus:ring-emerald-500 outline-none transition-all ${darkMode ? 'bg-slate-700 border-slate-600' : 'bg-gray-50 border-gray-200'}`} required />
-                          </div>
-                          <div className="relative">
-                            <div className="absolute left-3 top-3 text-gray-400"><Icon name="Lock" size={18}/></div>
-                            <input type="password" placeholder="Şifre" value={passInput} onChange={(e) => setPassInput(e.target.value)} className={`w-full pl-10 p-3 rounded-lg border focus:ring-2 focus:ring-emerald-500 outline-none transition-all ${darkMode ? 'bg-slate-700 border-slate-600' : 'bg-gray-50 border-gray-200'}`} required />
-                          </div>
-                          <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white p-3 rounded-lg font-semibold transition-all shadow-lg hover:shadow-emerald-500/30 flex items-center justify-center gap-2">
-                            {authMode === 'login' ? 'Giriş Yap' : 'Kayıt Ol ve Doğrula'} <Icon name="ArrowRight" size={18} />
-                          </button>
-                        </form>
-                        <div className="relative flex items-center py-2">
-                          <div className="flex-grow border-t border-gray-600"></div>
-                          <span className="flex-shrink-0 mx-4 text-gray-500 text-xs">veya</span>
-                          <div className="flex-grow border-t border-gray-600"></div>
-                        </div>
-                        <button onClick={handleDemoLogin} className={`w-full border p-3 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${darkMode ? 'border-gray-600 hover:bg-slate-700 text-gray-300' : 'border-gray-300 hover:bg-gray-50 text-gray-700'}`}>
-                          <Icon name="Cpu" size={18} /> Demo Olarak İncele
-                        </button>
                       </div>
                     )}
                   </div>
                 </div>
-              </div>
-            );
-          }
-
-          return (
-            <div className={`min-h-screen flex font-sans transition-colors duration-300`}>
-              
-              {/* Sidebar */}
-              <div className={`${sidebarOpen ? 'w-64' : 'w-20'} transition-all duration-300 flex-shrink-0 ${darkMode ? 'bg-slate-800 border-r border-slate-700' : 'bg-white border-r border-gray-200'} flex flex-col relative z-20`}>
-                <div className="p-4 flex items-center justify-between">
-                  {sidebarOpen && <span className={`font-bold text-xl tracking-tighter ${theme.text}`}>YZDBHTKS</span>}
-                  <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700">
-                    <Icon name={sidebarOpen ? "X" : "Menu"} size={20}/>
-                  </button>
-                </div>
-
-                <nav className="flex-1 p-4 space-y-2">
-                  {[
-                    { id: 'dashboard', icon: "Cpu", label: 'Panel' },
-                    { id: 'analysis', icon: "ShieldCheck", label: 'Analiz Et' },
-                    { id: 'history', icon: "Clock", label: 'Geçmiş' },
-                    { id: 'plans', icon: "CreditCard", label: 'Planlar' },
-                    { id: 'team', icon: "Users", label: 'Ekibimiz' },
-                    { id: 'settings', icon: "Settings", label: 'Ayarlar' },
-                  ].map((item) => (
-                    <button 
-                      key={item.id}
-                      onClick={() => setCurrentView(item.id)}
-                      className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${currentView === item.id ? `${theme.bg} text-white shadow-lg ${theme.shadow}` : 'hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-500 dark:text-gray-400'}`}
-                    >
-                      <Icon name={item.icon} size={22} />
-                      {sidebarOpen && <span>{item.label}</span>}
-                    </button>
-                  ))}
-                </nav>
-
-                <div className="p-4 border-t border-gray-200 dark:border-slate-700">
-                  <div className="flex items-center gap-3 mb-4">
-                     <div className={`w-10 h-10 rounded-full bg-gradient-to-br from-gray-500 to-gray-700 flex items-center justify-center text-white font-bold`}>
-                        {user.role === 'admin' ? 'A' : (user.name ? user.name[0] : 'U')}
-                     </div>
-                     {sidebarOpen && (
-                       <div className="overflow-hidden">
-                         <p className="text-sm font-semibold truncate">{user.name || user.email}</p>
-                         <p className={`text-xs uppercase ${theme.text}`}>{user.plan}</p>
-                       </div>
-                     )}
-                  </div>
-                  <button onClick={handleLogout} className="w-full flex items-center gap-2 p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all">
-                    <Icon name="LogOut" size={20} />
-                    {sidebarOpen && <span>Çıkış Yap</span>}
-                  </button>
-                </div>
-              </div>
-
-              {/* Content */}
-              <div className="flex-1 flex flex-col h-screen overflow-hidden">
-                
-                {/* Header */}
-                <header className={`h-16 flex items-center justify-between px-6 border-b ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-white/50 border-gray-200'} backdrop-blur-md z-10`}>
-                  <h2 className="text-lg font-semibold capitalize">{currentView === 'history' ? 'Geçmiş Analizler' : (currentView === 'settings' ? 'Ayarlar' : (currentView === 'team' ? 'Ekibimiz' : (currentView === 'plans' ? 'Planlar' : (currentView === 'analysis' ? 'Analiz' : 'Kontrol Paneli'))))}</h2>
-                  <div className="flex items-center gap-4">
-                    <button 
-                      onClick={() => setDarkMode(!darkMode)}
-                      className={`p-2 rounded-full ${darkMode ? 'bg-slate-700 text-yellow-400' : 'bg-gray-200 text-slate-700'}`}
-                    >
-                      <Icon name={darkMode ? "Sun" : "Moon"} size={20} />
-                    </button>
-                  </div>
-                </header>
-
-                {/* Main View Area */}
-                <main className="flex-1 overflow-y-auto p-6 scrollbar-hide">
-                  
-                  {/* DASHBOARD VIEW */}
-                  {currentView === 'dashboard' && (
-                    <div className="space-y-6 animate-fadeIn">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className={`p-6 rounded-2xl ${darkMode ? 'bg-gradient-to-br from-slate-800 to-slate-900' : 'bg-white'} shadow-xl border border-slate-700/50`}>
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <p className="text-sm text-gray-400">Sistem Durumu</p>
-                              <h3 className={`text-2xl font-bold mt-1 ${theme.text}`}>Aktif</h3>
-                            </div>
-                            <div className={theme.text}><Icon name="Cpu" /></div>
-                          </div>
-                          <div className="mt-4 text-xs text-gray-500">Sunucular: YZDBHTKS_Server_01</div>
-                        </div>
-                        
-                        <div className={`p-6 rounded-2xl ${darkMode ? 'bg-gradient-to-br from-slate-800 to-slate-900' : 'bg-white'} shadow-xl border border-slate-700/50`}>
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <p className="text-sm text-gray-400">Mevcut Plan</p>
-                              <h3 className="text-2xl font-bold text-blue-400 mt-1 uppercase">{user.plan}</h3>
-                            </div>
-                            <div className="text-blue-500"><Icon name="CreditCard" /></div>
-                          </div>
-                          <div className="mt-4 text-xs text-gray-500">Yükseltmek için planlar sekmesine gidin</div>
-                        </div>
-
-                        <div className={`p-6 rounded-2xl ${darkMode ? 'bg-gradient-to-br from-slate-800 to-slate-900' : 'bg-white'} shadow-xl border border-slate-700/50`}>
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <p className="text-sm text-gray-400">Toplam Analiz</p>
-                              <h3 className="text-2xl font-bold text-purple-400 mt-1">{analysisHistory.length}</h3>
-                            </div>
-                            <div className="text-purple-500"><Icon name="FileText" /></div>
-                          </div>
-                          <div className="mt-4 text-xs text-gray-500">Bu oturumda kaydedilen veriler</div>
-                        </div>
-                      </div>
-
-                      <div className={`p-8 rounded-2xl ${darkMode ? 'bg-slate-800' : 'bg-white'} border border-slate-700/50 text-center`}>
-                        <div className={`mx-auto mb-4 animate-bounce ${theme.text}`} style={{width: '64px'}}><Icon name="Leaf" size={64}/></div>
-                        <h2 className="text-2xl font-bold mb-2">Geleceğin Sistemine Hoşgeldiniz</h2>
-                        <p className="text-gray-400 max-w-lg mx-auto mb-6">
-                          Bitkilerinizin sağlığını yapay zeka ile koruyun. YZDBHTKS v3.0 modülü ile hastalıkları tespit edin.
-                        </p>
-                        <button onClick={() => setCurrentView('analysis')} className={`${theme.bg} ${theme.bgHover} text-white px-8 py-3 rounded-full font-semibold shadow-lg transition-all transform hover:scale-105`}>
-                          Analize Başla
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* ANALYSIS VIEW */}
-                  {currentView === 'analysis' && (
-                    <div className="max-w-4xl mx-auto space-y-6 animate-fadeIn">
-                      
-                      <div className={`p-6 rounded-2xl ${darkMode ? 'bg-slate-800' : 'bg-white'} shadow-xl`}>
-                        <h3 className={`text-xl font-semibold mb-4 flex items-center gap-2`}>
-                          <div className={theme.text}><Icon name="Upload" size={20}/></div> Görüntü Yükle
-                        </h3>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                          <div className="space-y-4">
-                            <div 
-                              className={`border-2 border-dashed rounded-xl h-64 flex flex-col items-center justify-center cursor-pointer transition-all ${selectedImage ? `${theme.border} ${theme.bgLight}` : 'border-gray-500 hover:border-gray-400'}`}
-                              onClick={() => document.getElementById('fileUpload').click()}
-                            >
-                              {selectedImage ? (
-                                <img src={selectedImage} alt="Preview" className="h-full w-full object-contain rounded-lg" />
-                              ) : (
-                                <>
-                                  <div className="text-gray-400 mb-2"><Icon name="Upload" size={48} /></div>
-                                  <p className="text-gray-400">Resim seçmek için tıklayın</p>
-                                </>
-                              )}
-                              <input id="fileUpload" type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
-                            </div>
-
-                            <div className="space-y-2">
-                              <label className="text-sm text-gray-400">Model Seçimi</label>
-                              <select 
-                                value={selectedModel} 
-                                onChange={(e) => setSelectedModel(e.target.value)}
-                                className={`w-full p-3 rounded-lg ${darkMode ? 'bg-slate-700 text-white' : 'bg-gray-100 text-gray-900'} border-none outline-none focus:ring-2 ${theme.ring}`}
-                              >
-                                <option value="yzdbhtks">YZDBHTKS v3.0 (Standart - .h5)</option>
-                                <option value="gemini_pro">Gemini Pro (Bahçıvan Modu - Premium)</option>
-                              </select>
-                            </div>
-
-                            <button 
-                              onClick={runAnalysis}
-                              disabled={!selectedImage || analyzing}
-                              className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all ${analyzing ? 'bg-gray-600 cursor-not-allowed' : `${theme.bg} ${theme.bgHover} text-white shadow-lg`}`}
-                            >
-                              {analyzing ? (
-                                <>
-                                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                                  Analiz Yapılıyor...
-                                </>
-                              ) : (
-                                <>
-                                  <Icon name="Cpu" /> Analizi Başlat
-                                </>
-                              )}
-                            </button>
-                          </div>
-
-                          {/* Results Section */}
-                          <div className={`rounded-xl p-6 ${darkMode ? 'bg-slate-900' : 'bg-gray-50'} border border-slate-700/50 flex flex-col`}>
-                            <h4 className="text-lg font-semibold mb-4 border-b border-gray-700 pb-2">Analiz Sonucu</h4>
-                            
-                            {analysisResult ? (
-                              <div className="space-y-4 flex-1 animate-slideIn">
-                                <div className="flex items-center justify-between">
-                                  <span className="text-gray-400">Tespit:</span>
-                                  <span className={`px-3 py-1 rounded-full text-sm font-bold ${
-                                    analysisResult.disease === 'Sağlıklı' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
-                                  }`}>
-                                    {analysisResult.disease}
-                                  </span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                  <span className="text-gray-400">Güven Oranı:</span>
-                                  <span className={`font-mono ${theme.text}`}>%{analysisResult.confidence}</span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                  <span className="text-gray-400">Şiddet:</span>
-                                  <span className="text-orange-400">{analysisResult.severity}</span>
-                                </div>
-
-                                <div className={`p-4 rounded-lg mt-4 text-sm ${darkMode ? 'bg-slate-800' : 'bg-white'} border border-slate-700`}>
-                                  <p className="whitespace-pre-wrap">{analysisResult.details}</p>
-                                </div>
-
-                                <div className="mt-auto pt-6 grid grid-cols-3 gap-2">
-                                  <button onClick={downloadPDF} className="flex flex-col items-center justify-center p-2 rounded hover:bg-slate-700 text-xs gap-1">
-                                    <div className="text-red-400"><Icon name="FileText" size={16}/></div> PDF
-                                  </button>
-                                  <button onClick={() => downloadJSON(analysisResult)} disabled={user.plan === 'normal'} className={`flex flex-col items-center justify-center p-2 rounded hover:bg-slate-700 text-xs gap-1 ${user.plan === 'normal' ? 'opacity-30 cursor-not-allowed' : ''}`}>
-                                    <div className="text-yellow-400"><Icon name="Download" size={16}/></div> JSON
-                                  </button>
-                                  <button onClick={() => downloadCSV(analysisResult)} disabled={user.plan === 'normal'} className={`flex flex-col items-center justify-center p-2 rounded hover:bg-slate-700 text-xs gap-1 ${user.plan === 'normal' ? 'opacity-30 cursor-not-allowed' : ''}`}>
-                                    <div className="text-green-400"><Icon name="Download" size={16}/></div> CSV
-                                  </button>
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="flex-1 flex flex-col items-center justify-center text-gray-500 opacity-50">
-                                <Icon name="ShieldCheck" size={48} className="mb-2"/>
-                                <p>Henüz analiz yapılmadı</p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* HISTORY VIEW */}
-                  {currentView === 'history' && (
-                    <div className="space-y-6 animate-fadeIn">
-                      <div className="flex justify-between items-center">
-                         <h3 className="text-2xl font-bold">Geçmiş Analizler</h3>
-                         <span className="text-sm text-gray-400">Toplam: {analysisHistory.length}</span>
-                      </div>
-
-                      {analysisHistory.length === 0 ? (
-                        <div className={`p-12 text-center rounded-2xl ${darkMode ? 'bg-slate-800' : 'bg-white'}`}>
-                          <div className="mx-auto text-gray-600 mb-4" style={{width: '48px'}}><Icon name="Clock" size={48}/></div>
-                          <p className="text-gray-400">Henüz kaydedilmiş bir analiz yok.</p>
-                        </div>
-                      ) : (
-                        <div className="grid gap-4">
-                          {analysisHistory.map((item) => (
-                            <div key={item.id} className={`p-4 rounded-xl flex items-center gap-4 ${darkMode ? 'bg-slate-800' : 'bg-white'} shadow border border-transparent hover:border-gray-600 transition-all`}>
-                              <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-700 flex-shrink-0">
-                                <img src={item.image} alt="Thumb" className="w-full h-full object-cover" />
-                              </div>
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2">
-                                  <h4 className="font-bold text-lg">{item.disease}</h4>
-                                  <span className="text-xs px-2 py-0.5 rounded-full bg-gray-700 text-gray-300">{item.timestamp}</span>
-                                </div>
-                                <p className="text-sm text-gray-400 truncate max-w-md">{item.details.substring(0, 60)}...</p>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <button onClick={() => downloadJSON(item)} className="p-2 hover:bg-slate-700 rounded-lg text-yellow-500" title="JSON İndir"><Icon name="Download" size={18}/></button>
-                                <button onClick={() => setAnalysisHistory(analysisHistory.filter(i => i.id !== item.id))} className="p-2 hover:bg-slate-700 rounded-lg text-red-400" title="Sil"><Icon name="Trash2" size={18}/></button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* SETTINGS VIEW */}
-                  {currentView === 'settings' && (
-                    <div className="max-w-4xl mx-auto space-y-8 animate-fadeIn">
-                      
-                      {/* Theme Settings */}
-                      <div className={`p-6 rounded-2xl ${darkMode ? 'bg-slate-800' : 'bg-white'} shadow-lg`}>
-                        <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                          <div className={theme.text}><Icon name="Palette" /></div> Görünüm ve Tema
-                        </h3>
-                        
-                        <div className="space-y-6">
-                          <div>
-                            <label className="text-sm text-gray-400 block mb-3">Renk Teması</label>
-                            <div className="flex flex-wrap gap-4">
-                              {Object.entries(THEME_STYLES).map(([key, style]) => (
-                                <button
-                                  key={key}
-                                  onClick={() => setThemeColor(key)}
-                                  className={`flex items-center gap-2 px-4 py-3 rounded-xl border-2 transition-all ${themeColor === key ? `${style.border} ${style.bgLight}` : 'border-gray-700 hover:border-gray-500'}`}
-                                >
-                                  <div className={`w-4 h-4 rounded-full`} style={{backgroundColor: style.hex}}></div>
-                                  <span className={themeColor === key ? `font-bold ${style.text}` : ''}>{style.name}</span>
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* User Settings */}
-                      <div className={`p-6 rounded-2xl ${darkMode ? 'bg-slate-800' : 'bg-white'} shadow-lg`}>
-                        <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                          <div className={theme.text}><Icon name="Users" /></div> Profil Ayarları
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div className="space-y-2">
-                            <label className="text-sm text-gray-400">Ad Soyad</label>
-                            <input type="text" defaultValue={user.name} className={`w-full p-3 rounded-lg ${darkMode ? 'bg-slate-900' : 'bg-gray-100'} border-none`} />
-                          </div>
-                          <div className="space-y-2">
-                            <label className="text-sm text-gray-400">E-posta</label>
-                            <input type="email" defaultValue={user.email} className={`w-full p-3 rounded-lg ${darkMode ? 'bg-slate-900' : 'bg-gray-100'} border-none`} />
-                          </div>
-                          <div className="col-span-full">
-                             <button className={`${theme.bg} ${theme.bgHover} text-white px-6 py-2 rounded-lg flex items-center gap-2`}>
-                               <Icon name="Save" size={18}/> Değişiklikleri Kaydet
-                             </button>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Admin Panel */}
-                      {user.role === 'admin' && (
-                        <div className={`p-6 rounded-2xl ${darkMode ? 'bg-slate-800' : 'bg-white'} border-2 border-red-500/30 shadow-lg`}>
-                          <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-xl font-bold flex items-center gap-2 text-red-400">
-                              <Icon name="ShieldCheck" /> Yönetici Paneli - Kullanıcı Yönetimi
-                            </h3>
-                            <span className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">Sadece Admin</span>
-                          </div>
-
-                          <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse">
-                              <thead>
-                                <tr className="border-b border-gray-700 text-gray-400 text-sm">
-                                  <th className="p-3">ID</th>
-                                  <th className="p-3">Kullanıcı</th>
-                                  <th className="p-3">Plan</th>
-                                  <th className="p-3 text-right">İşlemler</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {usersList.map(u => (
-                                  <tr key={u.id} className="border-b border-gray-700/50 hover:bg-white/5">
-                                    <td className="p-3 font-mono text-xs">{u.id}</td>
-                                    <td className="p-3">
-                                      <div className="font-bold">{u.name}</div>
-                                      <div className="text-xs text-gray-500">{u.email}</div>
-                                    </td>
-                                    <td className="p-3">
-                                      <select 
-                                        value={u.plan}
-                                        onChange={(e) => changeUserPlan(u.id, e.target.value)}
-                                        className={`bg-transparent border border-gray-600 rounded p-1 text-sm outline-none focus:${theme.border}`}
-                                      >
-                                        <option value="normal">Normal</option>
-                                        <option value="bitkiseven">Bitkiseven</option>
-                                        <option value="bahcivan">Bahçıvan</option>
-                                      </select>
-                                    </td>
-                                    <td className="p-3 text-right">
-                                      <button onClick={() => deleteUser(u.id)} className="text-red-400 hover:text-red-300 p-2 hover:bg-red-500/10 rounded">
-                                        <Icon name="Trash2" size={16} />
-                                      </button>
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* PLANS VIEW */}
-                  {currentView === 'plans' && (
-                    <div className="space-y-8 animate-fadeIn">
-                       <div className="text-center">
-                          <h3 className="text-3xl font-bold mb-2">Abonelik Planları</h3>
-                          <p className="text-gray-400">İhtiyacınıza uygun paketi seçin, bahçenizi koruyun.</p>
-                       </div>
-                       
-                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-                          {SUBSCRIPTION_PLANS.map((plan) => (
-                            <div key={plan.id} className={`relative p-8 rounded-2xl border transition-all duration-300 hover:scale-105 ${
-                              plan.id === 'bahcivan' ? `${theme.border} bg-slate-800 shadow-2xl` : 
-                              darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'
-                            }`}>
-                              {plan.id === 'bahcivan' && (
-                                <div className={`absolute top-0 right-0 ${theme.bg} text-white text-xs font-bold px-3 py-1 rounded-bl-xl rounded-tr-xl`}>
-                                  ÖNERİLEN
-                                </div>
-                              )}
-                              <h4 className="text-xl font-bold mb-2">{plan.name}</h4>
-                              <div className="flex items-end gap-1 mb-6">
-                                <span className="text-4xl font-bold">{plan.price} TL</span>
-                                <span className="text-gray-400 mb-1">/aylık</span>
-                              </div>
-                              
-                              <ul className="space-y-3 mb-8">
-                                {plan.features.map((feat, i) => (
-                                  <li key={i} className="flex items-center gap-2 text-sm">
-                                    <div className={theme.text}><Icon name="CheckCircle" size={16} /></div>
-                                    <span className="text-gray-300">{feat}</span>
-                                  </li>
-                                ))}
-                              </ul>
-
-                              <button 
-                                onClick={() => {
-                                  if (user.role === 'admin') {
-                                    alert("Admin hesabına zaten tüm paketler tanımlıdır.");
-                                  } else {
-                                    setUser({...user, plan: plan.id});
-                                    alert(`${plan.name} paketine geçiş yapıldı!`);
-                                  }
-                                }}
-                                className={`w-full py-3 rounded-lg font-semibold transition-colors ${
-                                  user.plan === plan.id 
-                                  ? 'bg-gray-600 cursor-default' 
-                                  : plan.id === 'bahcivan' ? `${theme.bg} ${theme.bgHover} text-white` : 'bg-slate-700 hover:bg-slate-600 text-white'
-                                }`}
-                              >
-                                {user.plan === plan.id ? 'Mevcut Plan' : 'Satın Al'}
-                              </button>
-                            </div>
-                          ))}
-                       </div>
-                    </div>
-                  )}
-
-                  {/* TEAM VIEW */}
-                  {currentView === 'team' && (
-                    <div className="space-y-8 animate-fadeIn">
-                      <div className="text-center mb-12">
-                        <h3 className="text-3xl font-bold mb-2">Ekibimiz</h3>
-                        <p className="text-gray-400">Bu projeye hayat veren yetenekli kadro.</p>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {TEAM_MEMBERS.map((member, idx) => (
-                          <div key={idx} className={`p-6 rounded-2xl flex items-center gap-4 ${darkMode ? 'bg-slate-800' : 'bg-white'} border border-slate-700/50 hover:border-gray-500 transition-colors`}>
-                            <div className={`w-14 h-14 rounded-full ${member.color} flex items-center justify-center text-white font-bold text-xl shadow-lg`}>
-                              {member.name.split(' ').map(n => n[0]).join('')}
-                            </div>
-                            <div>
-                              <h4 className="font-bold text-lg">{member.name}</h4>
-                              <p className={`text-sm ${theme.text} font-medium`}>{member.role}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="mt-12 p-6 rounded-xl bg-slate-800/50 border border-slate-700 text-center">
-                         <p className="text-gray-400 text-sm">
-                           Bu proje TÜBİTAK araştırmaları kapsamında geliştirilmiştir. <br/>
-                           İletişim: <span className={theme.text}>yzdbhtks@proton.me</span>
-                         </p>
-                      </div>
-                    </div>
-                  )}
-
-                </main>
-              </div>
+              )}
             </div>
-          );
-        }
+          </div>
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
-</body>
-</html>
+          {/* AI Modelleri Seçimi */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+             {/* GPT (Uygun Mod) */}
+             <button 
+                onClick={() => {
+                  if (['Uygun Mod', 'Bahçıvan Mod'].includes(subscription)) {
+                    setSelectedAI('GPT');
+                  } else {
+                    alert('GPT Asistanı için en az "Uygun Mod" gereklidir.');
+                  }
+                }}
+                className={`relative p-5 rounded-2xl border-2 transition-all text-left ${
+                  selectedAI === 'GPT' 
+                    ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' 
+                    : 'border-white bg-white hover:border-blue-200 shadow-sm'
+                }`}
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <div className="bg-blue-100 p-2 rounded-lg text-blue-600 font-bold text-xs">GPT</div>
+                  {selectedAI === 'GPT' ? <CheckCircle className="w-5 h-5 text-blue-500" /> : 
+                   (!['Uygun Mod', 'Bahçıvan Mod'].includes(subscription)) && <Lock className="w-4 h-4 text-slate-300" />}
+                </div>
+                <h4 className="font-bold text-slate-800">Uygun Mod</h4>
+                <p className="text-xs text-slate-500 mt-1">GPT Desteği ile temel soruları yanıtlar.</p>
+             </button>
+
+             {/* Gemini (Bahçıvan Mod) */}
+             <button 
+                onClick={() => {
+                  if (subscription === 'Bahçıvan Mod') {
+                    setSelectedAI('Gemini');
+                  } else {
+                    alert('Gemini Bahçıvan için "Bahçıvan Mod" gereklidir.');
+                  }
+                }}
+                className={`relative p-5 rounded-2xl border-2 transition-all text-left ${
+                  selectedAI === 'Gemini' 
+                    ? 'border-purple-500 bg-purple-50 ring-2 ring-purple-200' 
+                    : 'border-white bg-white hover:border-purple-200 shadow-sm'
+                }`}
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <div className="bg-gradient-to-r from-blue-400 to-purple-500 p-2 rounded-lg text-white font-bold text-xs">Gemini</div>
+                  {selectedAI === 'Gemini' ? <CheckCircle className="w-5 h-5 text-purple-500" /> : 
+                   (subscription !== 'Bahçıvan Mod') && <Lock className="w-4 h-4 text-slate-300" />}
+                </div>
+                <h4 className="font-bold text-slate-800">Bahçıvan Mod</h4>
+                <p className="text-xs text-slate-500 mt-1">Gelişmiş Gemini analizi ve uzman tavsiyesi.</p>
+             </button>
+          </div>
+        </div>
+
+        {/* SAĞ PANEL */}
+        <div className="lg:col-span-4 space-y-6">
+          <div className="bg-gradient-to-b from-emerald-900 to-teal-900 text-white rounded-3xl p-6 shadow-xl relative overflow-hidden">
+             <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full blur-3xl -mr-10 -mt-10"></div>
+             
+             <h3 className="font-bold text-lg mb-1">Paket Yükselt</h3>
+             <p className="text-emerald-200 text-xs mb-6 opacity-80">Daha iyi analiz sonuçları için.</p>
+
+             <div className="space-y-3">
+                {/* Demo Çıkış */}
+                <div 
+                  onClick={handleLogout}
+                  className={`p-4 rounded-xl border cursor-pointer transition-all ${
+                    subscription === 'Demo Hesap' ? 'bg-white/10 border-orange-400/50' : 'bg-white/5 border-white/10 hover:bg-white/10'
+                  }`}
+                >
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold text-orange-200">Demo Hesap</span>
+                    <span className="text-[10px] bg-orange-500 text-white px-2 py-0.5 rounded-full">Çıkış</span>
+                  </div>
+                </div>
+
+                {/* Beleş */}
+                <div 
+                  onClick={() => {setSubscription('Beleş'); setSelectedAI(null);}}
+                  className={`p-4 rounded-xl border cursor-pointer transition-all ${
+                    subscription === 'Beleş' ? 'bg-white/20 border-white' : 'bg-white/5 border-white/10 hover:bg-white/10'
+                  }`}
+                >
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold text-emerald-100">Beleş</span>
+                    <span className="font-bold">Ücretsiz</span>
+                  </div>
+                  <p className="text-[10px] text-emerald-300/70 mt-1">Sadece YZDBHTKS Modeli.</p>
+                </div>
+
+                {/* Uygun */}
+                <div 
+                  onClick={() => {setSubscription('Uygun Mod'); setSelectedAI('GPT');}}
+                  className={`p-4 rounded-xl border cursor-pointer transition-all ${
+                    subscription === 'Uygun Mod' ? 'bg-blue-500/30 border-blue-400' : 'bg-white/5 border-white/10 hover:bg-white/10'
+                  }`}
+                >
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold text-blue-100">Uygun Mod</span>
+                    <span className="font-bold">100 ₺</span>
+                  </div>
+                  <p className="text-[10px] text-blue-200/70 mt-1">+ GPT Desteği.</p>
+                </div>
+
+                {/* Bahçıvan */}
+                <div 
+                  onClick={() => {setSubscription('Bahçıvan Mod'); setSelectedAI('Gemini');}}
+                  className={`p-4 rounded-xl border cursor-pointer transition-all relative overflow-hidden ${
+                    subscription === 'Bahçıvan Mod' ? 'bg-purple-500/30 border-purple-400' : 'bg-white/5 border-white/10 hover:bg-white/10'
+                  }`}
+                >
+                  <div className="absolute top-0 right-0 bg-purple-500 text-[9px] px-2 py-0.5 rounded-bl-lg font-bold">ÖNERİLEN</div>
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold text-purple-100">Bahçıvan</span>
+                    <span className="font-bold">500 ₺</span>
+                  </div>
+                  <p className="text-[10px] text-purple-200/70 mt-1">+ Gemini Pro Desteği.</p>
+                </div>
+             </div>
+          </div>
+          
+          <div className="bg-white rounded-3xl shadow-sm border border-emerald-100 p-6">
+             <h4 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
+               <Users className="w-4 h-4 text-emerald-600" />
+               Geliştirici Notu
+             </h4>
+             <p className="text-sm text-slate-600 leading-relaxed">
+               Bu proje, bitki hastalıklarını erken teşhis etmek amacıyla <strong>Ayberk, Ahmet Akif, Selim ve Ahmet Ensar</strong> tarafından geliştirilmiştir.
+             </p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
