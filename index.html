@@ -3,33 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YZDBHTKS - Akıllı Flora</title>
+    <title>YZDBHTKS v5.0 - Bitki Hastalıkları Tespit Sistemi</title>
     
-    <!-- React & ReactDOM (Bunlar genellikle engellenmez) -->
+    <!-- React & ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
+    <!-- EmailJS SDK -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    
+    <script type="text/javascript">
+        (function() {
+            // Sizin Public Key'iniz (Ayarlanmış durumda)
+            emailjs.init("dIULpVaB1p8NW835G"); 
+        })();
+    </script>
+    
     <style>
-        /* --- DAHİLİ CSS (INTERNET OLMADAN ÇALIŞIR) --- */
+        /* --- DAHİLİ CSS --- */
         :root {
-            --primary: #10b981; /* Emerald 500 */
-            --primary-dark: #047857; /* Emerald 700 */
-            --primary-light: #d1fae5; /* Emerald 100 */
-            --bg-body: #f0fdf4; /* Emerald 50 */
-            --bg-card: #ffffff;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --border: #e2e8f0;
-            --radius: 16px;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --primary: #059669; /* Emerald 600 */
+            --primary-hover: #047857; /* Emerald 700 */
+            --bg-gradient-start: #ecfdf5;
+            --bg-gradient-end: #d1fae5;
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.5);
+            --radius: 20px;
+            --shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.1);
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
         
-        body { background-color: var(--bg-body); color: var(--text-main); line-height: 1.5; }
+        body { background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end)); color: #1e293b; min-height: 100vh; }
         
-        /* Layout Utilities */
+        /* Layout */
         .flex { display: flex; }
         .flex-col { flex-direction: column; }
         .items-center { align-items: center; }
@@ -37,20 +45,16 @@
         .justify-center { justify-content: center; }
         .gap-2 { gap: 0.5rem; }
         .gap-4 { gap: 1rem; }
-        .gap-6 { gap: 1.5rem; }
         .w-full { width: 100%; }
         .h-screen { min-height: 100vh; }
-        .hidden { display: none; }
-        .block { display: block; }
         
-        /* Grid System */
+        /* Grid */
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        .grid { display: grid; gap: 20px; }
+        .grid { display: grid; gap: 24px; }
         @media (min-width: 1024px) {
             .grid-cols-12 { grid-template-columns: repeat(12, 1fr); }
             .col-span-8 { grid-column: span 8; }
             .col-span-4 { grid-column: span 4; }
-            .col-span-3 { grid-column: span 3; }
         }
         @media (max-width: 1023px) {
             .grid-cols-12 { grid-template-columns: 1fr; }
@@ -59,73 +63,89 @@
 
         /* Components */
         .card {
-            background: var(--bg-card);
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
             border-radius: var(--radius);
-            padding: 24px;
+            padding: 30px;
             box-shadow: var(--shadow);
-            border: 1px solid var(--border);
+            transition: transform 0.2s;
         }
-
+        
         .btn {
             display: inline-flex; align-items: center; justify-content: center;
-            padding: 12px 24px; border-radius: 12px; font-weight: 600; cursor: pointer;
-            transition: all 0.2s; border: none; gap: 8px; font-size: 0.95rem;
+            padding: 14px 24px; border-radius: 12px; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; border: none; gap: 8px; font-size: 1rem; width: 100%;
         }
-        .btn:disabled { opacity: 0.7; cursor: not-allowed; }
-        .btn-primary { background-color: var(--primary); color: white; }
-        .btn-primary:hover { background-color: var(--primary-dark); }
-        .btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: white; }
-        .btn-outline:hover { background: rgba(255,255,255,0.1); }
-        .btn-ghost { background: transparent; color: var(--text-muted); padding: 8px; }
-        .btn-ghost:hover { color: var(--primary); background: var(--primary-light); }
+        .btn:active { transform: scale(0.98); }
+        .btn-primary { background-color: var(--primary); color: white; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3); }
+        .btn-primary:hover { background-color: var(--primary-hover); transform: translateY(-1px); }
+        .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
+        .btn-outline:hover { background: var(--primary); color: white; }
+        .btn-ghost { background: transparent; color: #64748b; padding: 8px; width: auto; }
+        .btn-ghost:hover { color: var(--primary); background: rgba(16, 185, 129, 0.1); }
 
-        .input-group { margin-bottom: 16px; position: relative; }
+        .input-group { margin-bottom: 20px; position: relative; }
         .input {
-            width: 100%; padding: 12px 16px 12px 40px; border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2);
-            color: white; outline: none; font-size: 1rem;
+            width: 100%; padding: 16px 16px 16px 48px; border-radius: 14px;
+            border: 1px solid #e2e8f0; background: white;
+            color: #1e293b; outline: none; font-size: 1rem; transition: border 0.2s;
         }
-        .input::placeholder { color: rgba(255,255,255,0.5); }
-        .input:focus { border-color: var(--primary); background: rgba(0,0,0,0.3); }
-        .input-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.5); }
+        .input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1); }
+        .input-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
 
-        /* Login Page Specifics */
-        .login-bg {
-            background: linear-gradient(135deg, #064e3b 0%, #065f46 50%, #1e293b 100%);
+        /* Login Specifics */
+        .login-page {
+            background-image: url('https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?q=80&w=2000&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            position: relative;
         }
-        .glass-card {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 24px;
-            max-width: 400px;
-            width: 100%;
-            overflow: hidden;
+        .login-overlay {
+            position: absolute; inset: 0; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px);
         }
+        .login-card {
+            position: relative; z-index: 10; width: 100%; max-width: 440px;
+            background: rgba(255, 255, 255, 0.95); padding: 40px;
+        }
+
+        .tab-group {
+            display: flex; background: #f1f5f9; padding: 4px; border-radius: 12px; margin-bottom: 24px;
+        }
+        .tab {
+            flex: 1; text-align: center; padding: 10px; border-radius: 10px; cursor: pointer;
+            font-size: 0.9rem; font-weight: 600; color: #64748b; transition: all 0.2s;
+        }
+        .tab.active { background: white; color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
         /* Navbar */
         .navbar {
-            background: white; border-bottom: 1px solid var(--border);
-            position: sticky; top: 0; z-index: 50; padding: 0 20px;
+            background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 50;
         }
-        .nav-content { max-width: 1200px; margin: 0 auto; height: 64px; display: flex; align-items: center; justify-content: space-between; }
+        .nav-content { max-width: 1200px; margin: 0 auto; height: 70px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; }
         
-        /* Tags & Badges */
-        .badge { padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
-        .badge-green { background: var(--primary-light); color: var(--primary-dark); }
+        /* Badges */
+        .badge { padding: 6px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px; }
+        .badge-green { background: #d1fae5; color: #065f46; }
         .badge-blue { background: #dbeafe; color: #1e40af; }
         .badge-purple { background: #f3e8ff; color: #6b21a8; }
         .badge-orange { background: #ffedd5; color: #9a3412; }
 
-        /* Animations */
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .spin { animation: spin 1s linear infinite; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-in { animation: fadeIn 0.4s ease-out; }
+        /* Menu Bar */
+        .menu-bar { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
+        .menu-btn { 
+            padding: 10px 20px; border-radius: 12px; background: white; border: 1px solid #e2e8f0; 
+            color: #64748b; font-weight: 600; cursor: pointer; white-space: nowrap; display: flex; gap: 8px; alignItems: center;
+        }
+        .menu-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
 
-        /* Modal */
+        /* Animation */
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-in { animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+
         .modal-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+            position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px);
             z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px;
         }
     </style>
@@ -134,11 +154,11 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState } = React;
+        const { useState, useEffect } = React;
 
-        // --- IKONLAR (SVG) ---
-        const Icon = ({ path, className, color }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={color || "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} style={{display:'block'}}>
+        // --- IKONLAR ---
+        const Icon = ({ path, className, color, size = 24 }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color || "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} style={{display:'block'}}>
                 {path}
             </svg>
         );
@@ -147,18 +167,20 @@
             Shield: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>,
             Leaf: <><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></>,
             Lock: <><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></>,
-            Unlock: <><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></>,
             User: <><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></>,
+            Mail: <><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></>,
             Camera: <><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></>,
             Upload: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></>,
-            Check: <polyline points="20 6 9 17 4 12"/>,
             X: <><path d="M18 6 6 18"/><path d="m6 6 12 12"/></>,
             Users: <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>,
             LogOut: <><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></>,
-            Play: <><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></>
+            Play: <><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></>,
+            Book: <><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></>,
+            Clock: <><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>,
+            Cloud: <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>,
+            FileText: <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><polyline points="10 9 9 9 8 9"/></>
         };
 
-        // --- VERİLER ---
         const TEAM_MEMBERS = {
             managers: ["Semra CANPOLAT", "Ahmet Esat KALKAN"],
             students: ["Ayberk ARICI", "Ahmet Akif ABUŞ", "Selim ERDEM", "Ahmet Ensar ALMAK"]
@@ -171,26 +193,110 @@
             { name: "Sağlıklı (Healthy)", treatment: "Bitkiniz gayet sağlıklı görünüyor." }
         ];
 
-        // --- UYGULAMA ---
+        // --- MOCK VERİLER ---
+        const DISEASE_LIBRARY = [
+            { title: "Külleme", desc: "Yaprakların üzerinde beyaz, unsu bir tabaka oluşur. Nemli havalarda yayılır.", cure: "Hava sirkülasyonunu artırın, kükürt uygulayın." },
+            { title: "Yaprak Lekesi", desc: "Yapraklarda kahverengi veya siyah benekler oluşur.", cure: "Hasta yaprakları temizleyin, sulamayı azaltın." },
+            { title: "Pas Hastalığı", desc: "Yaprak altlarında pas rengi püstüller görülür.", cure: "Dayanıklı türler seçin, fungisit kullanın." },
+            { title: "Sağlıklı Bitki", desc: "Yapraklar canlı yeşil, lekesiz ve formundadır.", cure: "Düzenli sulama ve gübrelemeye devam edin." }
+        ];
+
+        const MOCK_HISTORY = [
+            { date: "15.02.2026", result: "Külleme", confidence: "92" },
+            { date: "12.02.2026", result: "Sağlıklı", confidence: "98" },
+            { date: "10.02.2026", result: "Yaprak Lekesi", confidence: "85" }
+        ];
+
         function App() {
+            // State
             const [view, setView] = useState('login');
+            const [authMode, setAuthMode] = useState('login'); // login | register
+            const [roleMode, setRoleMode] = useState('user'); // user | admin
+            const [userTab, setUserTab] = useState('scanner'); // scanner | library | history
+            const [logoError, setLogoError] = useState(false); // Logo yüklenme kontrolü
+            
+            // Form Data
             const [email, setEmail] = useState('');
             const [password, setPassword] = useState('');
+            const [name, setName] = useState('');
+            
+            // App State
             const [loading, setLoading] = useState(false);
+            const [error, setError] = useState('');
+            const [success, setSuccess] = useState('');
+            const [registeredUsers, setRegisteredUsers] = useState([]);
             const [showTeam, setShowTeam] = useState(false);
             const [subscription, setSubscription] = useState('Beleş');
             const [selectedAI, setSelectedAI] = useState(null);
             const [image, setImage] = useState(null);
             const [result, setResult] = useState(null);
 
+            // --- FONKSİYONLAR ---
+
+            const handleRegister = (e) => {
+                e.preventDefault();
+                setError('');
+                setSuccess('');
+                setLoading(true);
+
+                if(!email || !password || !name) {
+                    setError('Tüm alanları doldurunuz.');
+                    setLoading(false);
+                    return;
+                }
+
+                // EmailJS ile Kayıt Maili Gönderme (Gerçek)
+                // DİKKAT: "YOUR_TEMPLATE_ID" kısmını kendi template ID'niz ile değiştirin.
+                emailjs.send("service_mgbun0x", "template_n11gtgq", {
+                    to_name: name,
+                    to_email: email,
+                    message: `Merhaba ${name}, YZDBHTKS sistemine kaydınız başarıyla alındı. Şifreniz: ${password}`
+                }).then(
+                    (response) => {
+                        console.log("SUCCESS!", response.status, response.text);
+                        // Başarılı olursa kullanıcıya bilgi ver
+                        alert("Kayıt Başarılı! E-posta gönderildi. Lütfen Spam/Gereksiz klasörünü kontrol edin.");
+                    },
+                    (err) => {
+                        console.log("FAILED...", err);
+                        // Hata detayını göster
+                        alert("Mail Gönderme Hatası: " + JSON.stringify(err));
+                    }
+                );
+
+                setTimeout(() => {
+                    const newUser = { email, password, name, role: 'user' };
+                    setRegisteredUsers([...registeredUsers, newUser]);
+                    setSuccess('Kayıt başarılı! Şimdi giriş yapabilirsiniz.');
+                    setAuthMode('login'); // Girişe yönlendir
+                    setLoading(false);
+                }, 1000);
+            };
+
             const handleLogin = (e) => {
                 e.preventDefault();
+                setError('');
                 setLoading(true);
+
                 setTimeout(() => {
-                    if (email === 'yzdbhtks@proton.me' && password === '2026_yzdbhtks_buyuyor') {
-                        setView('admin');
-                    } else if (email) {
-                        setView('user');
+                    if (roleMode === 'admin') {
+                        if (email === 'yzdbhtks@proton.me' && password === '2026_yzdbhtks_buyuyor') {
+                            setView('admin');
+                        } else {
+                            setError('Yetkisiz Erişim! Yönetici bilgileri hatalı.');
+                        }
+                    } else {
+                        if (email === 'yzdbhtks@proton.me') {
+                            setError('Yöneticiler "Yönetici Girişi" sekmesini kullanmalıdır.');
+                            setLoading(false);
+                            return;
+                        }
+                        const user = registeredUsers.find(u => u.email === email && u.password === password);
+                        if (user || (registeredUsers.length === 0)) {
+                            setView('user');
+                        } else {
+                            setError('Kullanıcı bulunamadı veya şifre hatalı.');
+                        }
                     }
                     setLoading(false);
                 }, 1000);
@@ -201,7 +307,6 @@
                 setTimeout(() => {
                     setView('user');
                     setSubscription('Demo Hesap');
-                    setEmail('ziyaretci@demo.com');
                     setLoading(false);
                 }, 800);
             };
@@ -215,10 +320,35 @@
                 }, 2000);
             };
 
+            const downloadReport = () => {
+                alert("PDF Raporu oluşturuluyor ve indiriliyor... (Simülasyon)");
+            };
+
+            // --- ORTAK BİLEŞENLER ---
+            
+            // Logo Bileşeni (Resim varsa resmi, yoksa ikonu gösterir)
+            const Logo = ({ size = 70, iconSize = 36 }) => {
+                if (!logoError) {
+                    return (
+                        <img 
+                            src="logo1.jpg" 
+                            alt="Logo" 
+                            onError={() => setLogoError(true)}
+                            style={{width: size, height: size, borderRadius:'50%', objectFit:'cover', margin: size > 50 ? '0 auto 20px' : '0', display:'block', boxShadow: size > 50 ? '0 0 0 8px rgba(255,255,255,0.2)' : 'none'}}
+                        />
+                    );
+                }
+                return (
+                    <div style={{width: size, height: size, background: size > 50 ? '#ecfdf5' : '#d1fae5', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', margin: size > 50 ? '0 auto 20px' : '0', padding: size > 50 ? 0 : '8px', boxShadow: size > 50 ? '0 0 0 8px rgba(255,255,255,0.2)' : 'none'}}>
+                        <Icon path={Icons.Leaf} color="#059669" size={iconSize} />
+                    </div>
+                );
+            };
+
             // --- EKİP MODALI ---
             const TeamModal = () => (
                 <div className="modal-overlay">
-                    <div className="card animate-in" style={{maxWidth: '500px', width:'100%'}}>
+                    <div className="card animate-in" style={{maxWidth: '500px', width:'100%', background:'white'}}>
                         <div className="flex items-center justify-between" style={{marginBottom: '20px', borderBottom:'1px solid #eee', paddingBottom:'10px'}}>
                             <div className="flex items-center gap-2">
                                 <Icon path={Icons.Users} color="#10b981" />
@@ -228,19 +358,22 @@
                         </div>
                         
                         <div style={{marginBottom:'20px'}}>
-                            <h3 style={{fontSize:'0.8rem', color:'#10b981', textTransform:'uppercase', fontWeight:'bold', marginBottom:'10px'}}>Yöneticiler</h3>
+                            <h3 style={{fontSize:'0.8rem', color:'#10b981', textTransform:'uppercase', fontWeight:'bold', marginBottom:'10px'}}>Yöneticiler & Öğretmenler</h3>
                             {TEAM_MEMBERS.managers.map((m,i) => (
                                 <div key={i} style={{background:'#f0fdf4', padding:'10px', borderRadius:'8px', marginBottom:'5px', color:'#064e3b', fontWeight:'500'}}>{m}</div>
                             ))}
                         </div>
 
                         <div>
-                            <h3 style={{fontSize:'0.8rem', color:'#10b981', textTransform:'uppercase', fontWeight:'bold', marginBottom:'10px'}}>Öğrenciler</h3>
+                            <h3 style={{fontSize:'0.8rem', color:'#10b981', textTransform:'uppercase', fontWeight:'bold', marginBottom:'10px'}}>Geliştirici Ekip</h3>
                             <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px'}}>
                                 {TEAM_MEMBERS.students.map((s,i) => (
                                     <div key={i} style={{fontSize:'0.9rem', color:'#334155'}}>• {s}</div>
                                 ))}
                             </div>
+                        </div>
+                        <div style={{marginTop:'20px', fontSize:'0.75rem', color:'#94a3b8', textAlign:'center'}}>
+                            © 2026 YZDBHTKS - TÜBİTAK
                         </div>
                     </div>
                 </div>
@@ -249,39 +382,71 @@
             // --- LOGIN EKRANI ---
             if (view === 'login') {
                 return (
-                    <div className="flex flex-col items-center justify-center h-screen login-bg">
+                    <div className="flex flex-col items-center justify-center h-screen login-page animate-in">
+                        <div className="login-overlay"></div>
                         {showTeam && <TeamModal />}
                         
-                        <div className="glass-card animate-in">
-                            <div style={{padding:'40px 30px', textAlign:'center'}}>
-                                <div style={{width:'80px', height:'80px', background:'rgba(16, 185, 129, 0.2)', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 20px', border:'1px solid rgba(16, 185, 129, 0.3)'}}>
-                                    <Icon path={Icons.Leaf} color="#6ee7b7" style={{width:40, height:40}} />
-                                </div>
-                                <h1 style={{color:'white', fontSize:'2rem', fontWeight:'bold', marginBottom:'5px'}}>YZDBHTKS</h1>
-                                <p style={{color:'rgba(255,255,255,0.7)', fontSize:'0.9rem'}}>Akıllı Flora v5.0</p>
+                        <div className="card login-card">
+                            <div style={{textAlign:'center', marginBottom:'30px'}}>
+                                <Logo size={70} iconSize={36} />
+                                <h1 style={{color:'#064e3b', fontSize:'2rem', fontWeight:'800', marginBottom:'4px'}}>YZDBHTKS</h1>
+                                <p style={{color:'#64748b', fontSize:'0.9rem'}}>Bitki Hastalıkları Tespit Sistemi v5.0</p>
                             </div>
 
-                            <div style={{padding:'0 30px 40px'}}>
-                                <form onSubmit={handleLogin}>
-                                    <div className="input-group">
-                                        <div className="input-icon"><Icon path={Icons.User} style={{width:20}} /></div>
-                                        <input className="input" placeholder="E-Posta" value={email} onChange={e => setEmail(e.target.value)} type="email" />
+                            <div className="tab-group">
+                                <div className={`tab ${authMode==='login' ? 'active' : ''}`} onClick={() => {setAuthMode('login'); setError('');}}>Giriş Yap</div>
+                                <div className={`tab ${authMode==='register' ? 'active' : ''}`} onClick={() => {setAuthMode('register'); setError('');}}>Kayıt Ol</div>
+                            </div>
+
+                            {authMode === 'login' && (
+                                <div style={{display:'flex', gap:'10px', marginBottom:'20px', fontSize:'0.85rem'}}>
+                                    <label style={{cursor:'pointer', display:'flex', alignItems:'center', gap:'5px', color: roleMode==='user'?'#059669':'#64748b'}}>
+                                        <input type="radio" name="role" checked={roleMode==='user'} onChange={() => setRoleMode('user')} />
+                                        Kullanıcı Girişi
+                                    </label>
+                                    <label style={{cursor:'pointer', display:'flex', alignItems:'center', gap:'5px', color: roleMode==='admin'?'#dc2626':'#64748b'}}>
+                                        <input type="radio" name="role" checked={roleMode==='admin'} onChange={() => setRoleMode('admin')} />
+                                        Yönetici Girişi
+                                    </label>
+                                </div>
+                            )}
+
+                            <form onSubmit={authMode === 'login' ? handleLogin : handleRegister}>
+                                {authMode === 'register' && (
+                                    <div className="input-group animate-in">
+                                        <div className="input-icon"><Icon path={Icons.User} size={20} /></div>
+                                        <input className="input" placeholder="Ad Soyad" value={name} onChange={e => setName(e.target.value)} type="text" />
                                     </div>
-                                    <div className="input-group">
-                                        <div className="input-icon"><Icon path={Icons.Lock} style={{width:20}} /></div>
-                                        <input className="input" placeholder="Şifre" value={password} onChange={e => setPassword(e.target.value)} type="password" />
-                                    </div>
-                                    <button type="submit" disabled={loading} className="btn btn-primary w-full" style={{marginBottom:'15px'}}>
-                                        {loading ? 'Giriş Yapılıyor...' : 'Giriş Yap'}
-                                    </button>
-                                </form>
+                                )}
                                 
-                                <button onClick={handleDemo} disabled={loading} className="btn btn-outline w-full" style={{marginBottom:'15px'}}>
-                                    <Icon path={Icons.Play} style={{width:18}} /> Demo Modu
+                                <div className="input-group">
+                                    <div className="input-icon"><Icon path={Icons.Mail} size={20} /></div>
+                                    <input className="input" placeholder="E-Posta Adresi" value={email} onChange={e => setEmail(e.target.value)} type="email" />
+                                </div>
+                                
+                                <div className="input-group">
+                                    <div className="input-icon"><Icon path={Icons.Lock} size={20} /></div>
+                                    <input className="input" placeholder="Şifre" value={password} onChange={e => setPassword(e.target.value)} type="password" />
+                                </div>
+
+                                {error && <div style={{padding:'12px', background:'#fef2f2', color:'#dc2626', borderRadius:'8px', fontSize:'0.85rem', marginBottom:'15px', border:'1px solid #fee2e2', display:'flex', alignItems:'center', gap:'8px'}}><Icon path={Icons.Shield} size={16}/> {error}</div>}
+                                {success && <div style={{padding:'12px', background:'#f0fdf4', color:'#16a34a', borderRadius:'8px', fontSize:'0.85rem', marginBottom:'15px', border:'1px solid #dcfce7'}}>{success}</div>}
+
+                                <button type="submit" disabled={loading} className="btn btn-primary" style={{marginBottom:'15px'}}>
+                                    {loading ? <div className="spin" style={{width:20, height:20, border:'2px solid white', borderTopColor:'transparent', borderRadius:'50%'}}></div> : 
+                                     (authMode === 'login' ? (roleMode === 'admin' ? 'Yönetici Olarak Gir' : 'Giriş Yap') : 'Kayıt Ol')}
                                 </button>
-                                
-                                <button onClick={() => setShowTeam(true)} style={{background:'none', border:'none', color:'rgba(255,255,255,0.6)', width:'100%', fontSize:'0.8rem', cursor:'pointer'}}>
-                                    Proje Ekibi & Emeği Geçenler
+                            </form>
+                            
+                            {authMode === 'login' && roleMode === 'user' && (
+                                <button onClick={handleDemo} disabled={loading} className="btn btn-outline" style={{marginBottom:'15px'}}>
+                                    <Icon path={Icons.Play} size={18} /> Demo Modu
+                                </button>
+                            )}
+                            
+                            <div style={{textAlign:'center', marginTop:'10px'}}>
+                                <button onClick={() => setShowTeam(true)} style={{background:'none', border:'none', color:'#64748b', fontSize:'0.8rem', cursor:'pointer', textDecoration:'underline'}}>
+                                    Proje Ekibi
                                 </button>
                             </div>
                         </div>
@@ -289,18 +454,39 @@
                 );
             }
 
-            // --- ADMIN EKRANI (Basitleştirilmiş) ---
+            // --- ADMIN EKRANI ---
             if (view === 'admin') {
                 return (
                     <div style={{minHeight:'100vh', background:'#0f172a', color:'white', padding:'20px'}}>
                         <div className="container">
                             <div className="flex justify-between items-center" style={{marginBottom:'30px'}}>
-                                <h1 style={{fontSize:'1.5rem', fontWeight:'bold', color:'white'}}>Yönetim Paneli</h1>
-                                <button onClick={() => setView('login')} className="btn btn-outline" style={{borderColor:'#334155'}}>Çıkış</button>
+                                <div>
+                                    <h1 style={{fontSize:'1.5rem', fontWeight:'bold', color:'white'}}>Yönetim Paneli</h1>
+                                    <div style={{fontSize:'0.8rem', color:'#ef4444', display:'flex', alignItems:'center', gap:'5px', marginTop:'5px'}}>
+                                        <div style={{width:8, height:8, background:'#ef4444', borderRadius:'50%'}}></div> GÜVENLİ ROOT ERİŞİMİ
+                                    </div>
+                                </div>
+                                <button onClick={() => {setView('login'); setRoleMode('user'); setEmail(''); setPassword('');}} className="btn btn-outline" style={{borderColor:'#334155', color:'#cbd5e1'}}>Çıkış</button>
                             </div>
-                            <div className="card" style={{background:'#1e293b', border:'1px solid #334155', textAlign:'center', padding:'50px'}}>
-                                <h2 style={{fontSize:'2rem', color:'#10b981', marginBottom:'10px'}}>12.500 ₺</h2>
-                                <p style={{color:'#94a3b8'}}>Toplam Gelir</p>
+                            
+                            <div className="grid grid-cols-12">
+                                <div className="col-span-4 card" style={{background:'#1e293b', border:'1px solid #334155', textAlign:'center'}}>
+                                    <h2 style={{fontSize:'2.5rem', color:'#10b981', fontWeight:'800'}}>12.500 ₺</h2>
+                                    <p style={{color:'#94a3b8'}}>Toplam Gelir</p>
+                                </div>
+                                <div className="col-span-8 card" style={{background:'#1e293b', border:'1px solid #334155'}}>
+                                    <h3 style={{color:'white', marginBottom:'15px', fontWeight:'600'}}>Sistem Durumu</h3>
+                                    <div style={{display:'flex', gap:'20px'}}>
+                                        <div style={{flex:1, background:'#0f172a', padding:'15px', borderRadius:'10px'}}>
+                                            <div style={{color:'#94a3b8', fontSize:'0.8rem'}}>Aktif Kullanıcı</div>
+                                            <div style={{fontSize:'1.2rem', fontWeight:'bold', color:'#3b82f6'}}>142</div>
+                                        </div>
+                                        <div style={{flex:1, background:'#0f172a', padding:'15px', borderRadius:'10px'}}>
+                                            <div style={{color:'#94a3b8', fontSize:'0.8rem'}}>Sunucu Yükü</div>
+                                            <div style={{fontSize:'1.2rem', fontWeight:'bold', color:'#a855f7'}}>%42</div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -314,118 +500,185 @@
                     <nav className="navbar">
                         <div className="nav-content">
                             <div className="flex items-center gap-2">
-                                <div style={{background:'#d1fae5', padding:'8px', borderRadius:'8px'}}><Icon path={Icons.Leaf} color="#059669" /></div>
+                                <Logo size={40} iconSize={24} />
                                 <div>
-                                    <div style={{fontWeight:'bold', color:'#064e3b'}}>YZDBHTKS</div>
-                                    <div style={{fontSize:'0.7rem', color:'#059669'}}>v5.0</div>
+                                    <div style={{fontWeight:'800', color:'#064e3b', fontSize:'1.1rem'}}>YZDBHTKS</div>
+                                    <div style={{fontSize:'0.75rem', color:'#059669', fontWeight:'600'}}>v5.0</div>
                                 </div>
                             </div>
                             <div className="flex items-center gap-4">
-                                <div style={{textAlign:'right'}}>
-                                    <div style={{fontSize:'0.9rem', fontWeight:'600'}}>{subscription === 'Demo Hesap' ? 'Ziyaretçi' : 'Kullanıcı'}</div>
+                                <div style={{textAlign:'right', display:'none', '@media(min-width:768px)':{display:'block'}}}>
+                                    <div style={{fontSize:'0.9rem', fontWeight:'600', color:'#1e293b'}}>{subscription === 'Demo Hesap' ? 'Ziyaretçi' : 'Kullanıcı'}</div>
                                     <span className={`badge ${subscription === 'Bahçıvan Mod' ? 'badge-purple' : subscription === 'Uygun Mod' ? 'badge-blue' : 'badge-orange'}`}>{subscription}</span>
                                 </div>
-                                <button onClick={() => setView('login')} className="btn-ghost"><Icon path={Icons.LogOut} /></button>
+                                <button onClick={() => {setView('login'); setRegisteredUsers([]);}} className="btn-ghost" title="Çıkış Yap"><Icon path={Icons.LogOut} /></button>
                             </div>
                         </div>
                     </nav>
 
                     <div className="container" style={{marginTop:'30px'}}>
                         <div className="grid grid-cols-12">
-                            {/* SOL PANEL - TARAYICI */}
+                            {/* SOL PANEL - MAIN CONTENT */}
                             <div className="col-span-8">
                                 <div className="card">
-                                    <div className="flex justify-between items-center" style={{marginBottom:'20px', paddingBottom:'15px', borderBottom:'1px solid #f1f5f9'}}>
-                                        <h2 className="flex items-center gap-2" style={{fontWeight:'bold', color:'#0f172a'}}>
-                                            <Icon path={Icons.Camera} color="#10b981" /> Bitki Tarayıcı
-                                        </h2>
-                                        <div className="flex gap-2">
-                                            {['Külleme', 'Leke', 'Pas'].map(t => <span key={t} className="badge badge-green">{t}</span>)}
-                                        </div>
+                                    <div className="menu-bar">
+                                        <div onClick={() => setUserTab('scanner')} className={`menu-btn ${userTab === 'scanner' ? 'active' : ''}`}><Icon path={Icons.Camera} size={18}/> Tarayıcı</div>
+                                        <div onClick={() => setUserTab('library')} className={`menu-btn ${userTab === 'library' ? 'active' : ''}`}><Icon path={Icons.Book} size={18}/> Ansiklopedi</div>
+                                        <div onClick={() => setUserTab('history')} className={`menu-btn ${userTab === 'history' ? 'active' : ''}`}><Icon path={Icons.Clock} size={18}/> Geçmiş</div>
                                     </div>
 
-                                    {!image ? (
-                                        <div style={{border:'2px dashed #cbd5e1', borderRadius:'16px', padding:'60px', textAlign:'center', cursor:'pointer', position:'relative'}} className="flex flex-col items-center justify-center">
-                                            <input type="file" accept="image/*" onChange={(e) => {
-                                                const file = e.target.files[0];
-                                                if(file) {
-                                                    const reader = new FileReader();
-                                                    reader.onload = (e) => setImage(e.target.result);
-                                                    reader.readAsDataURL(file);
-                                                }
-                                            }} style={{position:'absolute', inset:0, opacity:0, cursor:'pointer'}} />
-                                            <div style={{background:'#ecfdf5', padding:'20px', borderRadius:'50%', marginBottom:'15px'}}>
-                                                <Icon path={Icons.Upload} color="#10b981" style={{width:32, height:32}} />
-                                            </div>
-                                            <p style={{fontSize:'1.1rem', fontWeight:'500'}}>Fotoğraf Yükle</p>
-                                        </div>
-                                    ) : (
-                                        <div className="flex flex-col md:flex-row gap-6">
-                                            <div style={{flex:1, aspectRatio:'1/1', background:'black', borderRadius:'12px', overflow:'hidden', position:'relative'}}>
-                                                <img src={image} style={{width:'100%', height:'100%', objectFit:'contain'}} />
-                                                <button onClick={() => {setImage(null); setResult(null);}} style={{position:'absolute', top:10, right:10, background:'white', border:'none', borderRadius:'50%', padding:'5px', cursor:'pointer'}}><Icon path={Icons.X} color="black" /></button>
-                                            </div>
-                                            <div style={{flex:1, display:'flex', flexDirection:'column', justifyContent:'center'}}>
-                                                {!result ? (
-                                                    <div style={{textAlign:'center'}}>
-                                                        <p style={{marginBottom:'20px', color:'#64748b'}}>YZDBHTKS v5.0 Modeli hazır.</p>
-                                                        <button onClick={runAnalysis} disabled={loading} className="btn btn-primary w-full">
-                                                            {loading ? 'Analiz Ediliyor...' : 'Hastalığı Tespit Et'}
-                                                        </button>
+                                    {/* SCANNER TAB */}
+                                    {userTab === 'scanner' && (
+                                        <div className="animate-in">
+                                            {!image ? (
+                                                <div style={{border:'2px dashed #cbd5e1', borderRadius:'16px', padding:'60px', textAlign:'center', cursor:'pointer', position:'relative', background:'#f8fafc', transition:'all 0.2s'}} className="flex flex-col items-center justify-center hover:bg-white hover:border-emerald-400">
+                                                    <input type="file" accept="image/*" onChange={(e) => {
+                                                        const file = e.target.files[0];
+                                                        if(file) {
+                                                            const reader = new FileReader();
+                                                            reader.onload = (e) => setImage(e.target.result);
+                                                            reader.readAsDataURL(file);
+                                                        }
+                                                    }} style={{position:'absolute', inset:0, opacity:0, cursor:'pointer'}} />
+                                                    <div style={{background:'#d1fae5', padding:'20px', borderRadius:'50%', marginBottom:'15px'}}>
+                                                        <Icon path={Icons.Upload} color="#059669" size={32} />
                                                     </div>
-                                                ) : (
-                                                    <div className="animate-in">
-                                                        <div style={{padding:'20px', background: result.name.includes('Sağlıklı') ? '#f0fdf4' : '#fef2f2', borderLeft: `4px solid ${result.name.includes('Sağlıklı') ? '#22c55e' : '#ef4444'}`, borderRadius:'12px', marginBottom:'15px'}}>
-                                                            <div style={{textTransform:'uppercase', fontSize:'0.75rem', color:'#64748b', marginBottom:'4px'}}>Sonuç</div>
-                                                            <h3 style={{fontSize:'1.5rem', fontWeight:'bold', marginBottom:'8px'}}>{result.name}</h3>
-                                                            <div style={{fontSize:'0.9rem'}}>Güven: <b>%{result.confidence}</b></div>
-                                                        </div>
-                                                        <div style={{padding:'15px', background:'#f8fafc', borderRadius:'12px', border:'1px solid #e2e8f0'}}>
-                                                            <div style={{fontWeight:'bold', marginBottom:'5px', color: selectedAI==='Gemini'?'#7e22ce':selectedAI==='GPT'?'#1d4ed8':'#334155'}}>
-                                                                {selectedAI === 'Gemini' ? 'Gemini Önerisi:' : selectedAI === 'GPT' ? 'GPT Önerisi:' : 'Tedavi:'}
+                                                    <p style={{fontSize:'1.1rem', fontWeight:'600', color:'#334155'}}>Fotoğraf Yükle</p>
+                                                    <p style={{fontSize:'0.9rem', color:'#94a3b8'}}>Analiz için buraya tıklayın</p>
+                                                </div>
+                                            ) : (
+                                                <div className="flex flex-col md:flex-row gap-6 animate-in">
+                                                    <div style={{flex:1, aspectRatio:'1/1', background:'black', borderRadius:'16px', overflow:'hidden', position:'relative', boxShadow:'0 10px 20px rgba(0,0,0,0.1)'}}>
+                                                        <img src={image} style={{width:'100%', height:'100%', objectFit:'contain'}} />
+                                                        <button onClick={() => {setImage(null); setResult(null);}} style={{position:'absolute', top:10, right:10, background:'rgba(255,255,255,0.9)', border:'none', borderRadius:'50%', padding:'8px', cursor:'pointer', boxShadow:'0 4px 6px rgba(0,0,0,0.1)'}}><Icon path={Icons.X} color="#1e293b" /></button>
+                                                    </div>
+                                                    <div style={{flex:1, display:'flex', flexDirection:'column', justifyContent:'center'}}>
+                                                        {!result ? (
+                                                            <div style={{textAlign:'center'}}>
+                                                                <div style={{background:'#eff6ff', padding:'15px', borderRadius:'12px', marginBottom:'20px', border:'1px solid #dbeafe'}}>
+                                                                    <p style={{color:'#1e40af', fontSize:'0.9rem', fontWeight:'500'}}>YZDBHTKS v5.0 Modeli Hazır</p>
+                                                                </div>
+                                                                <button onClick={runAnalysis} disabled={loading} className="btn btn-primary w-full shadow-lg">
+                                                                    {loading ? 'Yapay Zeka Analiz Ediyor...' : 'Hastalığı Tespit Et'}
+                                                                </button>
                                                             </div>
-                                                            <p style={{fontSize:'0.95rem', color:'#475569'}}>{result.treatment}</p>
+                                                        ) : (
+                                                            <div className="animate-in">
+                                                                <div style={{padding:'24px', background: result.name.includes('Sağlıklı') ? '#f0fdf4' : '#fef2f2', borderLeft: `6px solid ${result.name.includes('Sağlıklı') ? '#22c55e' : '#ef4444'}`, borderRadius:'16px', marginBottom:'20px', boxShadow:'0 4px 6px rgba(0,0,0,0.05)'}}>
+                                                                    <div style={{textTransform:'uppercase', fontSize:'0.75rem', color:'#64748b', marginBottom:'4px', fontWeight:'700', letterSpacing:'0.5px'}}>Tespit Sonucu</div>
+                                                                    <h3 style={{fontSize:'1.8rem', fontWeight:'800', marginBottom:'8px', color:'#0f172a'}}>{result.name}</h3>
+                                                                    <div style={{fontSize:'0.9rem', display:'flex', alignItems:'center', gap:'10px'}}>
+                                                                        <span style={{padding:'4px 8px', background:'rgba(255,255,255,0.5)', borderRadius:'6px'}}>Güven: <b>%{result.confidence}</b></span>
+                                                                    </div>
+                                                                </div>
+                                                                <div style={{padding:'20px', background:'white', borderRadius:'16px', border:'1px solid #e2e8f0', boxShadow:'0 4px 6px rgba(0,0,0,0.02)', marginBottom:'15px'}}>
+                                                                    <div style={{fontWeight:'700', marginBottom:'8px', color: selectedAI==='Gemini'?'#7e22ce':selectedAI==='GPT'?'#1d4ed8':'#334155', display:'flex', alignItems:'center', gap:'8px'}}>
+                                                                        {selectedAI === 'Gemini' ? 'Gemini Uzman Görüşü' : selectedAI === 'GPT' ? 'GPT Asistan Görüşü' : 'Temel Tedavi Önerisi'}
+                                                                    </div>
+                                                                    <p style={{fontSize:'0.95rem', color:'#475569', lineHeight:'1.6'}}>{result.treatment}</p>
+                                                                </div>
+                                                                <button onClick={downloadReport} className="btn btn-outline" style={{borderColor:'#cbd5e1', color:'#475569'}}>
+                                                                    <Icon path={Icons.FileText} size={18} /> PDF Raporu İndir
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+                                            
+                                            <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'20px', marginTop:'24px'}}>
+                                                <div onClick={() => subscription!=='Beleş' ? setSelectedAI('GPT') : alert('Bu özelliği kullanmak için "Uygun Mod" satın almalısınız.')} style={{padding:'24px', border:`2px solid ${selectedAI==='GPT'?'#3b82f6':'transparent'}`, background:'white', borderRadius:'16px', cursor:'pointer', position:'relative', boxShadow:'0 4px 6px rgba(0,0,0,0.05)', transition:'transform 0.2s'}}>
+                                                    <div style={{fontWeight:'800', color:'#1d4ed8', fontSize:'1.1rem', marginBottom:'5px'}}>Uygun Mod</div>
+                                                    <div style={{fontSize:'0.85rem', color:'#64748b'}}>GPT Destekli Analiz</div>
+                                                    {subscription==='Beleş' && <Icon path={Icons.Lock} color="#cbd5e1" style={{position:'absolute', top:24, right:24}} />}
+                                                </div>
+                                                <div onClick={() => subscription==='Bahçıvan Mod' ? setSelectedAI('Gemini') : alert('Bu özelliği kullanmak için "Bahçıvan Mod" satın almalısınız.')} style={{padding:'24px', border:`2px solid ${selectedAI==='Gemini'?'#a855f7':'transparent'}`, background:'white', borderRadius:'16px', cursor:'pointer', position:'relative', boxShadow:'0 4px 6px rgba(0,0,0,0.05)', transition:'transform 0.2s'}}>
+                                                    <div style={{fontWeight:'800', color:'#7e22ce', fontSize:'1.1rem', marginBottom:'5px'}}>Bahçıvan</div>
+                                                    <div style={{fontSize:'0.85rem', color:'#64748b'}}>Gemini Pro Uzman</div>
+                                                    {subscription!=='Bahçıvan Mod' && <Icon path={Icons.Lock} color="#cbd5e1" style={{position:'absolute', top:24, right:24}} />}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* LIBRARY TAB */}
+                                    {userTab === 'library' && (
+                                        <div className="animate-in">
+                                            <h3 style={{marginBottom:'20px', fontWeight:'700', color:'#064e3b'}}>Bitki Hastalıkları Ansiklopedisi</h3>
+                                            <div className="grid">
+                                                {DISEASE_LIBRARY.map((item, idx) => (
+                                                    <div key={idx} style={{padding:'20px', background:'white', borderRadius:'16px', borderLeft:'4px solid #10b981', boxShadow:'0 2px 5px rgba(0,0,0,0.05)'}}>
+                                                        <h4 style={{fontSize:'1.1rem', fontWeight:'700', color:'#065f46', marginBottom:'8px'}}>{item.title}</h4>
+                                                        <p style={{fontSize:'0.9rem', color:'#475569', marginBottom:'8px'}}>{item.desc}</p>
+                                                        <div style={{fontSize:'0.85rem', color:'#059669', background:'#ecfdf5', padding:'8px', borderRadius:'8px', display:'inline-block'}}>
+                                                            <strong>Tedavi:</strong> {item.cure}
                                                         </div>
                                                     </div>
-                                                )}
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* HISTORY TAB */}
+                                    {userTab === 'history' && (
+                                        <div className="animate-in">
+                                            <h3 style={{marginBottom:'20px', fontWeight:'700', color:'#064e3b'}}>Geçmiş Taramalar</h3>
+                                            <div className="flex flex-col gap-2">
+                                                {MOCK_HISTORY.map((item, idx) => (
+                                                    <div key={idx} style={{padding:'15px', background:'white', borderRadius:'12px', display:'flex', justifyContent:'space-between', alignItems:'center', border:'1px solid #f1f5f9'}}>
+                                                        <div style={{display:'flex', gap:'15px', alignItems:'center'}}>
+                                                            <div style={{background:'#f1f5f9', padding:'10px', borderRadius:'50%'}}><Icon path={Icons.Clock} size={18} color="#64748b"/></div>
+                                                            <div>
+                                                                <div style={{fontWeight:'600', color:'#1e293b'}}>{item.result}</div>
+                                                                <div style={{fontSize:'0.8rem', color:'#94a3b8'}}>{item.date}</div>
+                                                            </div>
+                                                        </div>
+                                                        <span className="badge badge-green">%{item.confidence}</span>
+                                                    </div>
+                                                ))}
                                             </div>
                                         </div>
                                     )}
                                 </div>
-                                
-                                <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'15px', marginTop:'20px'}}>
-                                    <div onClick={() => subscription!=='Beleş' ? setSelectedAI('GPT') : alert('Paket Yükseltin')} style={{padding:'20px', border:`2px solid ${selectedAI==='GPT'?'#3b82f6':'white'}`, background:'white', borderRadius:'16px', cursor:'pointer', position:'relative'}}>
-                                        <div style={{fontWeight:'bold', color:'#1d4ed8'}}>Uygun Mod (GPT)</div>
-                                        {subscription==='Beleş' && <Icon path={Icons.Lock} color="#cbd5e1" style={{position:'absolute', top:20, right:20}} />}
-                                    </div>
-                                    <div onClick={() => subscription==='Bahçıvan Mod' ? setSelectedAI('Gemini') : alert('Paket Yükseltin')} style={{padding:'20px', border:`2px solid ${selectedAI==='Gemini'?'#a855f7':'white'}`, background:'white', borderRadius:'16px', cursor:'pointer', position:'relative'}}>
-                                        <div style={{fontWeight:'bold', color:'#7e22ce'}}>Bahçıvan (Gemini)</div>
-                                        {subscription!=='Bahçıvan Mod' && <Icon path={Icons.Lock} color="#cbd5e1" style={{position:'absolute', top:20, right:20}} />}
-                                    </div>
-                                </div>
                             </div>
 
-                            {/* SAĞ PANEL - PAKETLER */}
+                            {/* SAĞ PANEL - WIDGETS & PAKETLER */}
                             <div className="col-span-4">
-                                <div style={{background:'linear-gradient(180deg, #064e3b 0%, #065f46 100%)', padding:'24px', borderRadius:'24px', color:'white', position:'relative', overflow:'hidden'}}>
-                                    <h3 style={{fontSize:'1.2rem', fontWeight:'bold', marginBottom:'4px'}}>Abonelik</h3>
-                                    <p style={{fontSize:'0.85rem', color:'#a7f3d0', marginBottom:'20px'}}>Proje devamlılığı için.</p>
+                                {/* HAVA DURUMU WIDGET */}
+                                <div style={{background:'linear-gradient(135deg, #3b82f6, #2563eb)', padding:'24px', borderRadius:'24px', color:'white', marginBottom:'24px', position:'relative', overflow:'hidden', boxShadow:'0 10px 20px -5px rgba(37, 99, 235, 0.3)'}}>
+                                    <div style={{position:'absolute', top:-10, right:-10, opacity:0.2}}><Icon path={Icons.Cloud} size={80} color="white"/></div>
+                                    <h4 style={{fontSize:'0.9rem', opacity:0.8, marginBottom:'4px'}}>Sakarya, Türkiye</h4>
+                                    <div style={{fontSize:'2.5rem', fontWeight:'800', marginBottom:'4px'}}>18°C</div>
+                                    <div style={{fontSize:'0.9rem', fontWeight:'500'}}>Parçalı Bulutlu</div>
+                                    <div style={{fontSize:'0.8rem', opacity:0.8, marginTop:'10px'}}>Nem: %65 • Rüzgar: 12km/s</div>
+                                </div>
+
+                                <div style={{background:'linear-gradient(180deg, #064e3b 0%, #047857 100%)', padding:'30px', borderRadius:'24px', color:'white', position:'relative', overflow:'hidden', boxShadow:'0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'}}>
+                                    <div style={{position:'absolute', top:-20, right:-20, width:100, height:100, background:'#10b981', filter:'blur(60px)', opacity:0.5}}></div>
+                                    <h3 style={{fontSize:'1.4rem', fontWeight:'800', marginBottom:'4px'}}>Abonelik Paketleri</h3>
+                                    <p style={{fontSize:'0.9rem', color:'#a7f3d0', marginBottom:'24px'}}>Projenin devamlılığı için destek olun.</p>
                                     
-                                    <div className="flex flex-col gap-2">
-                                        <div onClick={() => setView('login')} style={{background:'rgba(255,255,255,0.1)', padding:'12px', borderRadius:'12px', cursor:'pointer', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-                                            <span>Çıkış Yap</span>
-                                            <span style={{fontSize:'0.7rem', background:'#f97316', padding:'2px 8px', borderRadius:'10px'}}>Demo</span>
+                                    <div className="flex flex-col gap-3">
+                                        <div onClick={() => setView('login')} style={{background:'rgba(255,255,255,0.1)', padding:'16px', borderRadius:'14px', cursor:'pointer', display:'flex', justifyContent:'space-between', alignItems:'center', border:'1px solid rgba(255,255,255,0.1)'}}>
+                                            <span style={{fontWeight:'600'}}>Çıkış Yap</span>
+                                            <span style={{fontSize:'0.7rem', background:'#f97316', padding:'4px 8px', borderRadius:'20px', fontWeight:'bold'}}>Demo</span>
                                         </div>
-                                        <div onClick={() => setSubscription('Beleş')} style={{background: subscription==='Beleş'?'rgba(255,255,255,0.2)':'transparent', border:'1px solid rgba(255,255,255,0.2)', padding:'12px', borderRadius:'12px', cursor:'pointer'}}>
-                                            <div className="flex justify-between"><span>Beleş</span><b>0 ₺</b></div>
+                                        <div onClick={() => setSubscription('Beleş')} style={{background: subscription==='Beleş'?'rgba(255,255,255,0.25)':'transparent', border:'1px solid rgba(255,255,255,0.2)', padding:'16px', borderRadius:'14px', cursor:'pointer', transition:'all 0.2s'}}>
+                                            <div className="flex justify-between items-center"><span style={{fontWeight:'600'}}>Beleş</span><b style={{fontSize:'1.1rem'}}>0 ₺</b></div>
                                         </div>
-                                        <div onClick={() => setSubscription('Uygun Mod')} style={{background: subscription==='Uygun Mod'?'rgba(59, 130, 246, 0.4)':'transparent', border:'1px solid rgba(255,255,255,0.2)', padding:'12px', borderRadius:'12px', cursor:'pointer'}}>
-                                            <div className="flex justify-between"><span>Uygun Mod</span><b>100 ₺</b></div>
+                                        <div onClick={() => setSubscription('Uygun Mod')} style={{background: subscription==='Uygun Mod'?'rgba(59, 130, 246, 0.5)':'transparent', border:'1px solid rgba(255,255,255,0.2)', padding:'16px', borderRadius:'14px', cursor:'pointer', transition:'all 0.2s'}}>
+                                            <div className="flex justify-between items-center"><span style={{fontWeight:'600'}}>Uygun Mod</span><b style={{fontSize:'1.1rem'}}>100 ₺</b></div>
                                         </div>
-                                        <div onClick={() => setSubscription('Bahçıvan Mod')} style={{background: subscription==='Bahçıvan Mod'?'rgba(168, 85, 247, 0.4)':'transparent', border:'1px solid rgba(255,255,255,0.2)', padding:'12px', borderRadius:'12px', cursor:'pointer'}}>
-                                            <div className="flex justify-between"><span>Bahçıvan</span><b>500 ₺</b></div>
+                                        <div onClick={() => setSubscription('Bahçıvan Mod')} style={{background: subscription==='Bahçıvan Mod'?'rgba(168, 85, 247, 0.5)':'transparent', border:'1px solid rgba(255,255,255,0.2)', padding:'16px', borderRadius:'14px', cursor:'pointer', transition:'all 0.2s'}}>
+                                            <div className="flex justify-between items-center"><span style={{fontWeight:'600'}}>Bahçıvan</span><b style={{fontSize:'1.1rem'}}>500 ₺</b></div>
                                         </div>
                                     </div>
+                                </div>
+                                <div style={{marginTop:'20px', padding:'20px', background:'white', borderRadius:'20px', border:'1px solid #e2e8f0'}}>
+                                    <h4 style={{fontWeight:'700', color:'#1e293b', marginBottom:'10px', display:'flex', alignItems:'center', gap:'8px'}}><Icon path={Icons.Users} size={18} color="#059669"/> Geliştirici Notu</h4>
+                                    <p style={{fontSize:'0.9rem', color:'#64748b', lineHeight:'1.5'}}>
+                                        Bu proje, bitki hastalıklarını erken teşhis etmek amacıyla <strong>Ayberk, Ahmet Akif, Selim ve Ahmet Ensar</strong> tarafından geliştirilmiştir.
+                                    </p>
                                 </div>
                             </div>
                         </div>
